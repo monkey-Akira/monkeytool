@@ -1,0 +1,11 @@
+{
+  "display_name": "猴子的小工具",
+  "loading_order": 99,
+  "requires": [],
+  "optional": [],
+  "js": "dist/monkey-tools.js",
+  "css": "dist/monkey-tools.css",
+  "author": "Admin",
+  "version": "0.1.0",
+  "homePage": ""
+}
