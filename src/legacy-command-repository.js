@@ -17,9 +17,111 @@ const PUNCT_DELETED_KEY = 'punctuation_deleted_buttons_v1';
 const CMD_STORAGE_KEY = 'punctuation_quick_commands_v3'; 
 const CMD_CAT_STORAGE_KEY = 'punctuation_cmd_cats_v3'; 
 const CMD_TAGS_STORAGE_KEY = 'punctuation_cmd_tags_v3'; 
-const PUNCT_SETTINGS_BUTTON = '新增符号'; 
-const PUNCT_CMD_BUTTON = '指令仓库'; 
 const EXTENSION_SETTINGS_KEY = 'monkey-tools';
+
+// 修改页签、按钮、标题、提示文字时优先改这里。
+const UI_TEXT = {
+    launcher: {
+        symbolSettings: '新增符号',
+        commandRepository: '指令仓库',
+    },
+    mainTabs: {
+        commands: '指令仓库',
+        symbols: '符号编辑',
+    },
+    titles: {
+        commandRepository: '常用指令库',
+        symbolSettings: '符号按钮设置',
+    },
+    actions: {
+        import: '📥 导入',
+        export: '📤 导出',
+        format: '⚙️ 格式',
+        newCommand: '➕ 新建',
+        collapse: '▲ 收起',
+        manageTags: '管理标签',
+        saveFormat: '保存格式',
+        saveCommand: '保存指令',
+        saveEdit: '保存修改',
+        cancel: '取消',
+        save: '保存',
+        back: '返回',
+        edit: '修改',
+        delete: '删除',
+        deleteSelected: '删除选中',
+        rename: '重命名',
+        addTag: '新增标签',
+        clearFilter: '✖ 清除筛选',
+        favorite: '设为常用',
+        unfavorite: '取消常用',
+    },
+    symbols: {
+        inlineToggle: '快捷符号',
+        addTab: '新增',
+        editTab: '编辑',
+        type: '类型',
+        single: '单独标点',
+        pair: '成对标点',
+        buttonName: '按钮名称',
+        buttonNamePlaceholder: '显示在按钮上',
+        insertSymbol: '要插入的符号',
+        leftSymbol: '左侧符号',
+        rightSymbol: '右侧符号',
+        rightSymbolOptional: '右侧符号 (可留空)',
+        dragSort: '拖动排序',
+    },
+    fields: {
+        search: '搜索指令标题、内容或标签...',
+        categoryFormat: '当前分类【{category}】的前后缀设置',
+        commandTitle: '指令标题 (选填，默认截取内容前10字)',
+        commandText: '输入指令内容... (必填)',
+        tags: '选择或新建标签 (可多选)',
+        newTag: '+新标签',
+        manageNewTag: '输入新标签名称...',
+        prefix: '前缀内容',
+        suffix: '后缀内容',
+        prefixPlaceholder: '如: [动作：',
+        suffixPlaceholder: '如: ]',
+    },
+    modal: {
+        ok: '确定',
+        gotIt: '我知道了',
+        confirmAction: '确定操作',
+        confirmDelete: '确定删除',
+    },
+    empty: {
+        noEditableSymbols: '暂无可编辑按钮',
+        noTags: '当前没有任何标签',
+        noCommands: '没有找到指令',
+    },
+    messages: {
+        fillRequired: '请填完必填项。',
+        requiredCannotBeEmpty: '必填项不能为空',
+        defaultDeleteOnly: '默认自带标点仅支持删除',
+        selectFirst: '请先勾选',
+        deletePickedSymbols: '确定要删除选中的 {count} 个标点按钮吗？',
+        exportSuccess: '数据导出成功！',
+        importConfirm: '即将导入备份数据！\n为防止误删，导入的数据将与现有数据进行【合并】。\n是否继续？',
+        importSuccess: '导入成功！共新增 {count} 条指令。',
+        importFailed: '读取失败：文件格式不正确或已损坏！',
+        formatSaved: '格式保存成功',
+        tagExists: '标签已存在',
+        renameTag: '将标签 [{tag}] 重命名为:',
+        deleteTag: '确定要全局删除标签 [{tag}] 吗？\n包含此标签的指令不会被删除，只是失去该标签。',
+        commandEmpty: '指令内容不能为空！',
+        deleteCommand: '你确定删除 [{category}] 下面的 1 条指令吗？',
+    },
+    tooltips: {
+        import: '合并导入JSON文件',
+        export: '导出所有数据备份',
+        format: '设置当前分类的前后缀',
+        backToList: '返回列表',
+        defaultDeleteOnly: '默认按钮只能删',
+    },
+};
+
+const PUNCT_SETTINGS_BUTTON = UI_TEXT.launcher.symbolSettings; 
+const PUNCT_CMD_BUTTON = UI_TEXT.launcher.commandRepository; 
 
 const DEFAULT_CMD_CATEGORIES = CMD_CATEGORIES;
 
@@ -746,9 +848,7 @@ const PunctuationButtons = {
             @font-face { font-family:"fugu"; src:url("https://files.catbox.moe/5bdcr7.ttf") format("truetype"); font-display:swap; font-weight:normal; font-style:normal; }
             :root { --monkey-tools-font:"fugu", "YouYuan", "Comic Sans MS", var(--mainFontFamily), "Microsoft YaHei", sans-serif; }
             .punct-settings *, .punct-settings *::before, .punct-settings *::after { box-sizing: border-box; }
-            .popup:has(.punct-settings) { background:#fff !important; border:2px solid #000 !important; border-radius:18px !important; outline:1.5px solid #000 !important; outline-offset:-7px !important; box-shadow:3px 3px 3px #80808075 !important; overflow:hidden !important; }
-            .popup:has(.punct-settings) .popup-content, .popup:has(.punct-settings) .popup-body { background:#fff !important; border-radius:18px !important; }
-            .punct-settings { position:relative; overflow-x:hidden; overflow-y:auto; max-height:85vh; color:#000; padding:16px; width:100%; min-width:280px; max-width:620px; font-family:var(--monkey-tools-font); -webkit-overflow-scrolling: touch; background:#fff; text-shadow:none; font-weight:600; }
+            .punct-settings { position:relative; overflow-x:hidden; overflow-y:auto; max-height:85vh; color:#000; padding:16px; width:100%; min-width:280px; max-width:620px; font-family:var(--monkey-tools-font); -webkit-overflow-scrolling: touch; background:#fff; text-shadow:none; font-weight:600; border-radius:20px; }
             .punct-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap: wrap; gap: 8px; }
             .punct-title { font-size:18px; font-weight:800; letter-spacing:0; background:#fff; border:1.5px solid #000; border-left:2px solid #000; border-radius:14px; outline:none; padding:10px 18px; }
             
@@ -833,8 +933,8 @@ const PunctuationButtons = {
                 <div class="cmd-confirm-text" id="custom-modal-msg"></div>
                 <input type="text" id="custom-modal-input" style="display:none; width:100%; box-sizing:border-box; margin-bottom:16px; padding:10px; border-radius:14px; border:1px solid rgba(0,0,0,0.15); font-family:inherit; outline:none;">
                 <div class="cmd-confirm-actions">
-                    <button class="punct-action" id="custom-modal-cancel" style="background:#fff; color:#000;">取消</button>
-                    <button class="punct-action" id="custom-modal-ok" style="background:#000; color:#fff;">确定</button>
+                    <button class="punct-action" id="custom-modal-cancel" style="background:#fff; color:#000;">${UI_TEXT.actions.cancel}</button>
+                    <button class="punct-action" id="custom-modal-ok" style="background:#000; color:#fff;">${UI_TEXT.modal.ok}</button>
                 </div>
             </div>
         </div>
@@ -871,15 +971,15 @@ const PunctuationButtons = {
             <div class="punct-settings">
                 ${PunctuationButtons.baseCss()}
                 <div class="punct-tabs monkey-main-tabs">
-                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'commands' ? 'active' : ''}" data-main-view="commands">指令仓库</button>
-                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'symbols' ? 'active' : ''}" data-main-view="symbols">符号编辑</button>
+                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'commands' ? 'active' : ''}" data-main-view="commands">${UI_TEXT.mainTabs.commands}</button>
+                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'symbols' ? 'active' : ''}" data-main-view="symbols">${UI_TEXT.mainTabs.symbols}</button>
                 </div>
                 <div data-main-panel="commands">
                 <div class="punct-head">
-                    <div class="punct-title">常用指令库</div>
+                    <div class="punct-title">${UI_TEXT.titles.commandRepository}</div>
                     <div style="display:flex; gap:8px;">
-                        <button class="punct-action" id="cmd-import-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="合并导入JSON文件">📥 导入</button>
-                        <button class="punct-action" id="cmd-export-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="导出所有数据备份">📤 导出</button>
+                        <button class="punct-action" id="cmd-import-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="${UI_TEXT.tooltips.import}">${UI_TEXT.actions.import}</button>
+                        <button class="punct-action" id="cmd-export-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="${UI_TEXT.tooltips.export}">${UI_TEXT.actions.export}</button>
                         <input type="file" id="cmd-import-file" accept=".json" style="display:none;">
                     </div>
                 </div>
@@ -889,51 +989,51 @@ const PunctuationButtons = {
                 </div>
 
                 <div class="cmd-toolbar">
-                    <input type="text" class="cmd-search" id="cmd-search-input" placeholder="搜索指令标题、内容或标签...">
-                    <button class="punct-action" id="cmd-toggle-cat-btn" style="height:38px; padding:0 12px;" title="设置当前分类的前后缀">⚙️ 格式</button>
-                    <button class="punct-action" id="cmd-toggle-editor-btn" style="height:38px;">➕ 新建</button>
+                    <input type="text" class="cmd-search" id="cmd-search-input" placeholder="${UI_TEXT.fields.search}">
+                    <button class="punct-action" id="cmd-toggle-cat-btn" style="height:38px; padding:0 12px;" title="${UI_TEXT.tooltips.format}">${UI_TEXT.actions.format}</button>
+                    <button class="punct-action" id="cmd-toggle-editor-btn" style="height:38px;">${UI_TEXT.actions.newCommand}</button>
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; min-height: 28px;">
                     <div class="cmd-filter-bar" id="cmd-filter-container"></div>
-                    <button class="tag-manage-btn" id="cmd-manage-tags-btn">管理标签</button>
+                    <button class="tag-manage-btn" id="cmd-manage-tags-btn">${UI_TEXT.actions.manageTags}</button>
                 </div>
 
                 <div class="cmd-editor-wrap" id="cmd-cat-panel">
                     <div class="punct-field" style="margin-bottom:12px;">
-                        <label>当前分类【<span id="current-cat-name" style="color:#000; font-size:14px; font-weight:800;"></span>】的前后缀设置</label>
+                        <label>${UI_TEXT.fields.categoryFormat.replace('{category}', '<span id="current-cat-name" style="color:#000; font-size:14px; font-weight:800;"></span>')}</label>
                     </div>
                     <div class="punct-field">
-                        <label>前缀内容</label>
-                        <input type="text" id="cmd-cat-prefix" placeholder="如: [动作：" style="font-size:14px; padding:10px;">
+                        <label>${UI_TEXT.fields.prefix}</label>
+                        <input type="text" id="cmd-cat-prefix" placeholder="${UI_TEXT.fields.prefixPlaceholder}" style="font-size:14px; padding:10px;">
                     </div>
                     <div class="punct-field">
-                        <label>后缀内容</label>
-                        <input type="text" id="cmd-cat-suffix" placeholder="如: ]" style="font-size:14px; padding:10px;">
+                        <label>${UI_TEXT.fields.suffix}</label>
+                        <input type="text" id="cmd-cat-suffix" placeholder="${UI_TEXT.fields.suffixPlaceholder}" style="font-size:14px; padding:10px;">
                     </div>
                     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-                        <button class="punct-action" id="cmd-cat-cancel-btn" style="background:#fff; color:#000;">取消</button>
-                        <button class="punct-action" id="cmd-cat-save-btn" style="background:#000; color:#fff;">保存格式</button>
+                        <button class="punct-action" id="cmd-cat-cancel-btn" style="background:#fff; color:#000;">${UI_TEXT.actions.cancel}</button>
+                        <button class="punct-action" id="cmd-cat-save-btn" style="background:#000; color:#fff;">${UI_TEXT.actions.saveFormat}</button>
                     </div>
                 </div>
 
                 <div class="cmd-editor-wrap" id="cmd-editor-panel">
                     <div class="punct-field">
-                        <input type="text" id="cmd-input-title" placeholder="指令标题 (选填，默认截取内容前10字)">
+                        <input type="text" id="cmd-input-title" placeholder="${UI_TEXT.fields.commandTitle}">
                     </div>
                     
                     <div class="punct-field">
                         <div class="cmd-quick-inserts">${quickInsertsHtml}</div>
-                        <textarea id="cmd-input-text" rows="3" placeholder="输入指令内容... (必填)"></textarea>
+                        <textarea id="cmd-input-text" rows="3" placeholder="${UI_TEXT.fields.commandText}"></textarea>
                     </div>
                     
                     <div class="punct-field">
-                        <label>选择或新建标签 (可多选)</label>
+                        <label>${UI_TEXT.fields.tags}</label>
                         <div class="cmd-tag-editor" id="cmd-editor-tags"></div>
                     </div>
                     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-                        <button class="punct-action" id="cmd-cancel-btn" style="background:#fff; color:#000;">取消</button>
-                        <button class="punct-action" id="cmd-save-btn" style="background:#000; color:#fff;">保存指令</button>
+                        <button class="punct-action" id="cmd-cancel-btn" style="background:#fff; color:#000;">${UI_TEXT.actions.cancel}</button>
+                        <button class="punct-action" id="cmd-save-btn" style="background:#000; color:#fff;">${UI_TEXT.actions.saveCommand}</button>
                     </div>
                 </div>
 
@@ -941,15 +1041,15 @@ const PunctuationButtons = {
                 </div>
                 <div data-main-panel="symbols" style="display:none;">
                     <div class="punct-head">
-                        <div class="punct-title">符号按钮设置</div>
+                        <div class="punct-title">${UI_TEXT.titles.symbolSettings}</div>
                         <label class="punct-action" style="gap:8px; cursor:pointer;">
                             <input type="checkbox" id="symbol-inline-toggle" style="width:auto;" ${PunctuationButtons.getInlineSymbolsEnabled() ? 'checked' : ''}>
-                            <span>快捷符号</span>
+                            <span>${UI_TEXT.symbols.inlineToggle}</span>
                         </label>
                     </div>
                     <div class="punct-tabs" id="symbol-tabs-container">
-                        <button class="punct-tab active" data-symbol-view="add">新增</button>
-                        <button class="punct-tab" data-symbol-view="edit">编辑</button>
+                        <button class="punct-tab active" data-symbol-view="add">${UI_TEXT.symbols.addTab}</button>
+                        <button class="punct-tab" data-symbol-view="edit">${UI_TEXT.symbols.editTab}</button>
                     </div>
                     <div class="punct-panel" id="symbol-content"></div>
                 </div>
@@ -968,13 +1068,13 @@ const PunctuationButtons = {
             
             if (isPromptMode) {
                 $input.val(options.defaultVal || '').show();
-                $wrap.find('#custom-modal-ok').css('background', '#222').text('确定');
+                $wrap.find('#custom-modal-ok').css('background', '#222').text(UI_TEXT.modal.ok);
             } else {
                 $input.hide();
                 if (options.isAlert) {
-                    $wrap.find('#custom-modal-ok').css('background', '#222').text('我知道了');
+                    $wrap.find('#custom-modal-ok').css('background', '#222').text(UI_TEXT.modal.gotIt);
                 } else {
-                    $wrap.find('#custom-modal-ok').css('background', '#000').text('确定操作');
+                    $wrap.find('#custom-modal-ok').css('background', '#000').text(UI_TEXT.modal.confirmAction);
                 }
             }
             
@@ -1051,8 +1151,8 @@ const PunctuationButtons = {
                     <div class="cmd-content"><div class="cmd-text" style="font-weight:600; font-size:14px; color:#111;">${PunctuationButtons.escapeHtml(item.name)}</div></div>
                     <button class="punct-action" data-edit-one ${isDefault ? 'style="opacity:.45;" title="默认按钮只能删"' : ''}>修改</button>
                 </div>`;
-            }).join('') : `<div style="text-align:center; padding:20px; color:#999;">暂无可编辑按钮</div>`;
-            $wrap.find('#symbol-content').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>删除选中</button></div>`);
+            }).join('') : `<div style="text-align:center; padding:20px; color:#999;">${UI_TEXT.empty.noEditableSymbols}</div>`;
+            $wrap.find('#symbol-content').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>${UI_TEXT.actions.deleteSelected}</button></div>`);
             const $list = $wrap.find('.cmd-list-wrap');
             let draggedRow = null;
             let pointerDragId = null;
@@ -1113,16 +1213,16 @@ const PunctuationButtons = {
              
             $wrap.find('[data-edit-one]').on('click', function () {
                 const name = window.jQuery(this).closest('.cmd-row').attr('data-name');
-                if (defaultNames.has(name)) return showModal({msg: '默认自带标点仅支持删除', isAlert:true});
+                if (defaultNames.has(name)) return showModal({msg: UI_TEXT.messages.defaultDeleteOnly, isAlert:true});
                 const item = PunctuationButtons.loadCustomSymbols().find(i => i.name === name);
                 if(item) renderSymbolEditForm(item, name);
             });
             
             $wrap.find('[data-delete-picked]').on('click', () => {
                 const picked = $wrap.find('[data-pick]:checked').map(function () { return window.jQuery(this).closest('.cmd-row').attr('data-name'); }).get();
-                if (!picked.length) return showModal({msg:'请先勾选', isAlert:true});
+                if (!picked.length) return showModal({msg:UI_TEXT.messages.selectFirst, isAlert:true});
                 showModal({
-                    msg: `确定要删除选中的 ${picked.length} 个标点按钮吗？`,
+                    msg: UI_TEXT.messages.deletePickedSymbols.replace('{count}', picked.length),
                     onOk: () => { PunctuationButtons.deleteCustomByNames(picked); renderSymbolEdit(); }
                 });
             });
@@ -1158,7 +1258,7 @@ const PunctuationButtons = {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            if (window.toastr) toastr.success('数据导出成功！');
+            if (window.toastr) toastr.success(UI_TEXT.messages.exportSuccess);
         });
 
         $wrap.find('#cmd-import-btn').on('click', () => {
@@ -1178,7 +1278,7 @@ const PunctuationButtons = {
                     }
                     
                     showModal({
-                        msg: '即将导入备份数据！\n为防止误删，导入的数据将与现有数据进行【合并】。\n是否继续？',
+                        msg: UI_TEXT.messages.importConfirm,
                         onOk: () => {
                             let importedCmds = Array.isArray(data.commands) ? data.commands : [];
                             let existingCmds = PunctuationButtons.loadCommands();
@@ -1218,11 +1318,11 @@ const PunctuationButtons = {
                             }
 
                             renderUI();
-                            if (window.toastr) toastr.success(`导入成功！共新增 ${addedCmdsCount} 条指令。`);
+                            if (window.toastr) toastr.success(UI_TEXT.messages.importSuccess.replace('{count}', addedCmdsCount));
                         }
                     });
                 } catch(err) {
-                    showModal({ msg: '读取失败：文件格式不正确或已损坏！', isAlert: true });
+                    showModal({ msg: UI_TEXT.messages.importFailed, isAlert: true });
                 }
                 $wrap.find('#cmd-import-file').val('');
             };
@@ -1269,13 +1369,13 @@ const PunctuationButtons = {
                 
                 const manageHeader = `
                     <div style="display:flex; gap:8px; margin-bottom:12px;">
-                        <input type="text" id="manage-new-tag-input" class="cmd-search" placeholder="输入新标签名称..." style="height:38px;">
-                        <button class="punct-action" id="manage-add-tag-btn" style="height:38px; background:#000; color:#fff; padding:0 16px;">新增标签</button>
+                        <input type="text" id="manage-new-tag-input" class="cmd-search" placeholder="${UI_TEXT.fields.manageNewTag}" style="height:38px;">
+                        <button class="punct-action" id="manage-add-tag-btn" style="height:38px; background:#000; color:#fff; padding:0 16px;">${UI_TEXT.actions.addTag}</button>
                     </div>
                 `;
 
                 if (globalTags.length === 0) {
-                    $wrap.find('#cmd-list-container').html(manageHeader + `<div style="text-align:center; padding:30px; color:#999;">当前没有任何标签</div>`);
+                    $wrap.find('#cmd-list-container').html(manageHeader + `<div style="text-align:center; padding:30px; color:#999;">${UI_TEXT.empty.noTags}</div>`);
                 } else {
                     const tagRows = globalTags.map(tag => `
                         <div class="cmd-row" style="align-items:center;">
@@ -1283,8 +1383,8 @@ const PunctuationButtons = {
                                 <div class="cmd-tag active" style="cursor:default; box-shadow:none;">${PunctuationButtons.escapeHtml(tag)}</div>
                             </div>
                             <div style="display:flex; gap:8px;">
-                                <button class="punct-action tag-edit-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px;">重命名</button>
-                                <button class="punct-action tag-del-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px; color:#000;">删除</button>
+                                <button class="punct-action tag-edit-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px;">${UI_TEXT.actions.rename}</button>
+                                <button class="punct-action tag-del-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px; color:#000;">${UI_TEXT.actions.delete}</button>
                             </div>
                         </div>
                     `).join('');
@@ -1296,7 +1396,7 @@ const PunctuationButtons = {
             $wrap.find('.cmd-toolbar, #cmd-filter-container').show();
             
             $wrap.find('#cmd-manage-tags-btn')
-                 .html('管理标签')
+                 .html(UI_TEXT.actions.manageTags)
                  .removeClass('back-mode')
                  .removeAttr('title');
             
@@ -1307,7 +1407,7 @@ const PunctuationButtons = {
                 $wrap.find('#cmd-cat-panel').css('display', 'none');
             }
 
-            if (state.editingId || $wrap.find('#cmd-toggle-editor-btn').text().includes('收起')) {
+            if (state.editingId || $wrap.find('#cmd-toggle-editor-btn').text().includes(UI_TEXT.actions.collapse.slice(-2))) {
                 $wrap.find('#cmd-editor-panel').css('display', 'block');
             } else {
                 $wrap.find('#cmd-editor-panel').css('display', 'none');
@@ -1347,7 +1447,7 @@ const PunctuationButtons = {
             });
 
             if (displayCmds.length === 0) {
-                $wrap.find('#cmd-list-container').html(`<div style="text-align:center; padding:40px; color:#999;">没有找到指令</div>`);
+                $wrap.find('#cmd-list-container').html(`<div style="text-align:center; padding:40px; color:#999;">${UI_TEXT.empty.noCommands}</div>`);
             } else {
                 const rows = displayCmds.map(cmd => {
                     const displayTitle = cmd.title || cmd.text.substring(0, 10);
@@ -1359,9 +1459,9 @@ const PunctuationButtons = {
                             ${cmd.tags && cmd.tags.length ? `<div class="cmd-tags-display">${cmd.tags.map(t => `<span class="cmd-tag-mini">${PunctuationButtons.escapeHtml(t)}</span>`).join('')}</div>` : ''}
                         </div>
                         <div class="cmd-actions">
-                            <div class="cmd-btn-icon ${cmd.isFavorite ? 'cmd-btn-heart' : ''} fav-trigger" title="${cmd.isFavorite ? '取消常用' : '设为常用'}">${cmd.isFavorite ? '❤' : '♡'}</div>
-                            <div class="cmd-btn-icon edit-trigger" title="修改">✎</div>
-                            <div class="cmd-btn-icon del-trigger" style="color:#000;" title="删除">✖</div>
+                            <div class="cmd-btn-icon ${cmd.isFavorite ? 'cmd-btn-heart' : ''} fav-trigger" title="${cmd.isFavorite ? UI_TEXT.actions.unfavorite : UI_TEXT.actions.favorite}">${cmd.isFavorite ? '❤' : '♡'}</div>
+                            <div class="cmd-btn-icon edit-trigger" title="${UI_TEXT.actions.edit}">✎</div>
+                            <div class="cmd-btn-icon del-trigger" style="color:#000;" title="${UI_TEXT.actions.delete}">✖</div>
                         </div>
                     </div>
                 `});
@@ -1375,8 +1475,8 @@ const PunctuationButtons = {
             $wrap.find('#cmd-input-title').val('');
             $wrap.find('#cmd-input-text').val('');
             $wrap.find('#cmd-editor-panel').css('display', 'none');
-            $wrap.find('#cmd-toggle-editor-btn').text('➕ 新建');
-            $wrap.find('#cmd-save-btn').text('保存指令');
+            $wrap.find('#cmd-toggle-editor-btn').text(UI_TEXT.actions.newCommand);
+            $wrap.find('#cmd-save-btn').text(UI_TEXT.actions.saveCommand);
             renderUI();
         };
 
@@ -1416,7 +1516,7 @@ const PunctuationButtons = {
 
             if (state.editingId) {
                 state.editingId = null;
-                $wrap.find('#cmd-save-btn').text('保存指令');
+                $wrap.find('#cmd-save-btn').text(UI_TEXT.actions.saveCommand);
             }
 
             renderUI();
@@ -1452,7 +1552,7 @@ const PunctuationButtons = {
             PunctuationButtons.saveCategorySettings(cats);
             
             renderUI();
-            if (window.toastr) toastr.success('格式保存成功');
+            if (window.toastr) toastr.success(UI_TEXT.messages.formatSaved);
         });
 
         $wrap.on('click', '#cmd-manage-tags-btn', () => {
@@ -1474,14 +1574,14 @@ const PunctuationButtons = {
                 renderUI();
                 setTimeout(() => $wrap.find('#manage-new-tag-input').focus(), 10);
             } else {
-                showModal({msg: '标签已存在', isAlert: true});
+                showModal({msg: UI_TEXT.messages.tagExists, isAlert: true});
             }
         });
 
         $wrap.on('click', '.tag-edit-btn', function() {
             const oldTag = String($(this).attr('data-tag'));
             showModal({
-                msg: `将标签 [${oldTag}] 重命名为:`,
+                msg: UI_TEXT.messages.renameTag.replace('{tag}', oldTag),
                 prompt: true,
                 defaultVal: oldTag,
                 onOk: (newTag) => {
@@ -1509,7 +1609,7 @@ const PunctuationButtons = {
         $wrap.on('click', '.tag-del-btn', function() {
             const tag = String($(this).attr('data-tag'));
             showModal({
-                msg: `确定要全局删除标签 [${tag}] 吗？\n包含此标签的指令不会被删除，只是失去该标签。`,
+                msg: UI_TEXT.messages.deleteTag.replace('{tag}', tag),
                 onOk: () => {
                     let cmds = PunctuationButtons.loadCommands();
                     cmds.forEach(cmd => { if(cmd.tags && cmd.tags.includes(tag)) { cmd.tags = cmd.tags.filter(t => t !== tag); } });
@@ -1576,7 +1676,7 @@ const PunctuationButtons = {
                 resetEditor(); 
                 $wrap.find('#cmd-toggle-cat-btn').removeClass('active'); 
                 panel.css('display', 'block'); 
-                $(this).text('▲ 收起'); 
+                $(this).text(UI_TEXT.actions.collapse); 
                 renderUI(); 
             }
         });
@@ -1585,7 +1685,7 @@ const PunctuationButtons = {
 
         $wrap.find('#cmd-save-btn').on('click', () => {
             const text = $wrap.find('#cmd-input-text').val().trim();
-            if (!text) return showModal({msg: '指令内容不能为空！', isAlert: true});
+            if (!text) return showModal({msg: UI_TEXT.messages.commandEmpty, isAlert: true});
             
             const rawTitle = $wrap.find('#cmd-input-title').val().trim();
             const title = rawTitle || text.substring(0, 10);
@@ -1639,8 +1739,8 @@ const PunctuationButtons = {
                 
                 $wrap.find('#cmd-toggle-cat-btn').removeClass('active');
                 $wrap.find('#cmd-editor-panel').css('display', 'block');
-                $wrap.find('#cmd-toggle-editor-btn').text('▲ 收起');
-                $wrap.find('#cmd-save-btn').text('保存修改');
+                $wrap.find('#cmd-toggle-editor-btn').text(UI_TEXT.actions.collapse);
+                $wrap.find('#cmd-save-btn').text(UI_TEXT.actions.saveEdit);
                 renderUI();
             }
         });
@@ -1651,7 +1751,7 @@ const PunctuationButtons = {
             const cmd = PunctuationButtons.loadCommands().find(c => c.id === id);
             if (!cmd) return;
             showModal({
-                msg: `你确定删除 [${cmd.category}] 下面的 1 条指令吗？`,
+                msg: UI_TEXT.messages.deleteCommand.replace('{category}', cmd.category),
                 onOk: () => {
                     let cmds = PunctuationButtons.loadCommands().filter(c => c.id !== id);
                     PunctuationButtons.saveCommands(cmds); renderUI();
@@ -1665,175 +1765,6 @@ const PunctuationButtons = {
 
     openSettings: () => {
         PunctuationButtons.openCommandPanel('symbols');
-        return;
-        if (!window.jQuery) {
-            window.toastr?.error('当前环境缺少 jQuery，无法打开符号设置。');
-            return;
-        }
-        const $ = window.jQuery;
-        const $wrap = $(`
-            <div class="punct-settings">
-                ${PunctuationButtons.baseCss()}
-                <div class="punct-head"><div class="punct-title">符号按钮设置</div></div>
-                <div class="punct-tabs">
-                    <button class="punct-tab active" data-view="add">新增</button>
-                    <button class="punct-tab" data-view="edit">编辑</button>
-                </div>
-                <div class="punct-panel" data-content></div>
-                ${PunctuationButtons.modalHtml}
-            </div>
-        `);
-
-        let modalCallback = null;
-        const showModal = (options) => {
-            $wrap.find('#custom-modal-msg').text(options.msg);
-            modalCallback = options.onOk;
-            $wrap.find('#custom-modal-input').hide();
-            if (options.isAlert) {
-                $wrap.find('#custom-modal-ok').css('background', '#222').text('我知道了');
-                $wrap.find('#custom-modal-cancel').hide();
-            } else {
-                $wrap.find('#custom-modal-ok').css('background', '#000').text('确定删除');
-                $wrap.find('#custom-modal-cancel').show();
-            }
-            $wrap.find('#custom-modal-layer').fadeIn(150);
-        };
-        $wrap.find('#custom-modal-cancel').on('click', () => { modalCallback = null; $wrap.find('#custom-modal-layer').fadeOut(150); });
-        $wrap.find('#custom-modal-ok').on('click', () => { if (modalCallback) modalCallback(); $wrap.find('#custom-modal-layer').fadeOut(150); });
-
-        const renderAdd = () => {
-            $wrap.find('[data-content]').html(`
-                <div class="punct-field"><label>类型</label><select data-add-type><option value="single">单独标点</option><option value="pair">成对标点</option></select></div>
-                <div class="punct-field"><label>按钮名称</label><input data-add-name placeholder="显示在按钮上"></div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div class="punct-field"><label data-left-label>要插入的符号</label><input data-add-left></div>
-                    <div class="punct-field" data-right-wrap style="display:none;"><label>右侧符号</label><input data-add-right></div>
-                </div>
-                <div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-save-add style="background:#000; color:#fff;">保存</button></div>
-            `);
-            $wrap.find('[data-add-type]').on('change', function () {
-                const isPair = window.jQuery(this).val() === 'pair';
-                $wrap.find('[data-right-wrap]').toggle(isPair);
-                $wrap.find('[data-left-label]').text(isPair ? '左侧符号' : '要插入的符号');
-            });
-            $wrap.find('[data-save-add]').on('click', () => {
-                const type = $wrap.find('[data-add-type]').val(), name = String($wrap.find('[data-add-name]').val() || '').trim();
-                const left = String($wrap.find('[data-add-left]').val() || ''), right = type === 'pair' ? String($wrap.find('[data-add-right]').val() || '') : '';
-                if (!name || !left || (type === 'pair' && !right)) return showModal({msg: '请填完必填项。', isAlert:true});
-                const custom = PunctuationButtons.loadCustomSymbols(); custom.push({ name, left, right });
-                PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.forgetDeletedName(name);
-                PunctuationButtons.register(); $wrap.find('[data-view="edit"]').click();
-            });
-        };
-        const renderEdit = () => {
-            const all = PunctuationButtons.getVisibleSymbols(), defaultNames = new Set(PunctuationButtons.defaultSymbols.map(item => item.name));
-            const rows = all.length ? all.map((item) => {
-                const isDefault = defaultNames.has(item.name);
-                return `<div class="cmd-row symbol-edit-row" data-name="${PunctuationButtons.escapeHtml(item.name)}" draggable="true" style="align-items:center; padding:10px 14px;">
-                    <span class="drag-handle" title="拖动排序">=</span>
-                    <input type="checkbox" data-pick>
-                    <div class="cmd-content"><div class="cmd-text" style="font-weight:600; font-size:14px; color:#111;">${PunctuationButtons.escapeHtml(item.name)}</div></div>
-                    <button class="punct-action" data-edit-one ${isDefault ? 'style="opacity:.45;" title="默认按钮只能删"' : ''}>修改</button>
-                </div>`;
-            }).join('') : `<div style="text-align:center; padding:20px; color:#999;">暂无可编辑按钮</div>`;
-            $wrap.find('[data-content]').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>删除选中</button></div>`);
-            const $list = $wrap.find('.cmd-list-wrap');
-            let draggedRow = null;
-            let pointerDragId = null;
-            const saveCurrentOrder = () => {
-                const orderedNames = $list.find('.cmd-row').map(function () { return window.jQuery(this).attr('data-name'); }).get();
-                PunctuationButtons.saveSymbolOrder(orderedNames);
-                PunctuationButtons.register();
-            };
-            $list.on('dragstart', '.cmd-row', function (event) {
-                draggedRow = this;
-                window.jQuery(this).addClass('dragging');
-                event.originalEvent.dataTransfer.effectAllowed = 'move';
-                event.originalEvent.dataTransfer.setData('text/plain', window.jQuery(this).attr('data-name'));
-            });
-            $list.on('dragover', '.cmd-row', function (event) {
-                event.preventDefault();
-                const $target = window.jQuery(this);
-                if (!draggedRow || this === draggedRow) return;
-                const targetRect = this.getBoundingClientRect();
-                const insertAfter = event.originalEvent.clientY > targetRect.top + targetRect.height / 2;
-                if (insertAfter) $target.after(draggedRow);
-                else $target.before(draggedRow);
-            });
-            $list.on('dragend', '.cmd-row', function () {
-                window.jQuery(this).removeClass('dragging');
-                if (draggedRow) saveCurrentOrder();
-                draggedRow = null;
-            });
-            $list.on('pointerdown', '.drag-handle', function (event) {
-                const row = window.jQuery(this).closest('.cmd-row')[0];
-                if (!row) return;
-                draggedRow = row;
-                pointerDragId = event.originalEvent.pointerId;
-                try { this.setPointerCapture?.(pointerDragId); } catch (_) {}
-                window.jQuery(row).addClass('dragging reorder-active');
-                window.jQuery(document).one('pointerup pointercancel', () => {
-                    if (!draggedRow) return;
-                    window.jQuery(draggedRow).removeClass('dragging reorder-active');
-                    saveCurrentOrder();
-                    draggedRow = null;
-                    pointerDragId = null;
-                });
-                event.preventDefault();
-            });
-            $list.on('pointermove', function (event) {
-                if (!draggedRow) return;
-                if (pointerDragId !== null && event.originalEvent.pointerId !== pointerDragId) return;
-                const pointerEvent = event.originalEvent;
-                const elementAtPoint = document.elementFromPoint(pointerEvent.clientX, pointerEvent.clientY);
-                const row = elementAtPoint?.closest?.('.cmd-row');
-                if (!row || row === draggedRow || !window.jQuery.contains($list[0], row)) return;
-                const targetRect = row.getBoundingClientRect();
-                const insertAfter = pointerEvent.clientY > targetRect.top + targetRect.height / 2;
-                if (insertAfter) window.jQuery(row).after(draggedRow);
-                else window.jQuery(row).before(draggedRow);
-                event.preventDefault();
-            });
-             
-            $wrap.find('[data-edit-one]').on('click', function () {
-                const name = window.jQuery(this).closest('.cmd-row').attr('data-name');
-                if (defaultNames.has(name)) return showModal({msg: '默认自带标点仅支持删除', isAlert:true});
-                const item = PunctuationButtons.loadCustomSymbols().find(i => i.name === name);
-                if(item) renderEditForm(item, name);
-            });
-            
-            $wrap.find('[data-delete-picked]').on('click', () => {
-                const picked = $wrap.find('[data-pick]:checked').map(function () { return window.jQuery(this).closest('.cmd-row').attr('data-name'); }).get();
-                if (!picked.length) return showModal({msg:'请先勾选', isAlert:true});
-                showModal({
-                    msg: `确定要删除选中的 ${picked.length} 个标点按钮吗？`,
-                    onOk: () => { PunctuationButtons.deleteCustomByNames(picked); renderEdit(); }
-                });
-            });
-        };
-        const renderEditForm = (item, oldName) => {
-            $wrap.find('[data-content]').html(`
-                <div class="punct-field"><label>按钮名称</label><input data-edit-name value="${PunctuationButtons.escapeHtml(item.name)}"></div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div class="punct-field"><label>左侧符号</label><input data-edit-left value="${PunctuationButtons.escapeHtml(item.left)}"></div>
-                    <div class="punct-field"><label>右侧符号 (可留空)</label><input data-edit-right value="${PunctuationButtons.escapeHtml(item.right || '')}"></div>
-                </div>
-                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
-                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">返回</button>
-                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">保存</button>
-                </div>
-            `);
-            $wrap.find('[data-back-edit]').on('click', renderEdit);
-            $wrap.find('[data-save-edit]').on('click', () => {
-                const name = String($wrap.find('[data-edit-name]').val() || '').trim(), left = String($wrap.find('[data-edit-left]').val() || ''), right = String($wrap.find('[data-edit-right]').val() || '');
-                if (!name || !left) return showModal({msg:'必填项不能为空', isAlert:true});
-                if (name !== oldName) { PunctuationButtons.rememberDeletedName(oldName); PunctuationButtons.hideButtonByName(oldName); PunctuationButtons.forgetDeletedName(name); }
-                const custom = PunctuationButtons.loadCustomSymbols(), idx = custom.findIndex(i => i.name === oldName);
-                if(idx !== -1) { custom[idx] = { name, left, right }; PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.register(); renderEdit(); }
-            });
-        };
-        $wrap.find('[data-view]').on('click', function () { $wrap.find('.punct-tab').removeClass('active'); $(this).addClass('active'); $(this).data('view') === 'add' ? renderAdd() : renderEdit(); });
-        renderAdd(); PunctuationButtons.openPopup($wrap, { okButton: '关闭', forceCustom: true });
     },
 
     bindButton: (name, handler) => {
