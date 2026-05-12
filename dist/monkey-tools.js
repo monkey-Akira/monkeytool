@@ -780,14 +780,12 @@ var PunctuationButtons = {
 	},
 	showInlineSymbolBar: () => {
 		if (!PunctuationButtons.getInlineSymbolsEnabled()) return;
-		const bar = document.getElementById("monkey-tools-inline-symbols");
-		if (!bar) return;
+		if (!document.getElementById("monkey-tools-inline-symbols")) return;
 		if (PunctuationButtons.symbolBarHideTimer) {
 			clearTimeout(PunctuationButtons.symbolBarHideTimer);
 			PunctuationButtons.symbolBarHideTimer = null;
 		}
-		PunctuationButtons.positionInlineSymbolBar();
-		bar.style.display = "flex";
+		PunctuationButtons.positionInlineSymbolBar(true);
 	},
 	scheduleInlineSymbolBarShow: () => {
 		if (PunctuationButtons.symbolBarShowTimer) {
@@ -830,16 +828,19 @@ var PunctuationButtons = {
 			}
 		}, true);
 	},
-	positionInlineSymbolBar: () => {
+	positionInlineSymbolBar: (show = false) => {
 		const bar = document.getElementById("monkey-tools-inline-symbols");
 		const textarea = PunctuationButtons.getSendTextarea();
 		if (!bar || !textarea) return;
 		const rect = textarea.getBoundingClientRect();
 		const width = Math.max(220, Math.min(rect.width, window.innerWidth - 24));
 		const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
+		const display = show || bar.style.display === "flex" ? "flex" : "none";
+		const visibility = show ? "hidden" : bar.style.visibility || "visible";
+		bar.style.cssText = `position:fixed;left:${left}px;top:8px;width:${width}px;z-index:2147482500;display:${display};visibility:${visibility};flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;`;
 		const top = Math.max(8, rect.top - bar.offsetHeight - 8);
-		const display = bar.style.display === "flex" ? "flex" : "none";
-		bar.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${width}px;z-index:2147482500;display:${display};flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;`;
+		bar.style.top = `${top}px`;
+		if (show) bar.style.visibility = "visible";
 	},
 	scheduleInlineSymbolBarRetry: () => {
 		if (PunctuationButtons.symbolBarRetryTimer) return;
@@ -957,7 +958,7 @@ var PunctuationButtons = {
 
             .cmd-modal-overlay { position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:rgba(255,255,255,0.72); backdrop-filter:none; -webkit-backdrop-filter:none; z-index:9999; border-radius:18px; display:none; }
             #custom-modal-layer { z-index:10001; }
-            #cmd-manager-layer { z-index:10000; }
+            #cmd-manager-layer { position:fixed; inset:0; width:100vw; height:100dvh; border-radius:0; z-index:10000; }
             .cmd-confirm-box { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; border:2px solid #000; border-radius:20px; padding:24px; box-shadow:3px 3px 3px #80808075; text-align:center; width:85%; max-width:320px; box-sizing:border-box; outline:1.5px solid #000; outline-offset:-7px; }
             .cmd-confirm-text { font-size:15px; font-weight:700; color:#000; margin-bottom:20px; line-height:1.6; word-break:break-all; white-space:pre-wrap; }
             .cmd-confirm-actions { display:flex; justify-content:center; gap:12px; }
