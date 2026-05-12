@@ -1,4 +1,4 @@
-import { COMMAND_BUTTON_NAME, MODULE_NAME, SYMBOL_SETTINGS_BUTTON_NAME } from "./defaults";
+import { COMMAND_BUTTON_NAME, MODULE_NAME } from "./defaults";
 import type { MonkeyToolsSettings, SymbolButton } from "./types";
 
 declare global {
@@ -79,10 +79,7 @@ export function openPopup(content: HTMLElement): void {
 export function registerScriptButtons(symbols: SymbolButton[], handlers: Record<string, () => void>): void {
   const buttons = symbols
     .map((symbol) => ({ name: symbol.name, visible: true }))
-    .concat([
-      { name: SYMBOL_SETTINGS_BUTTON_NAME, visible: true },
-      { name: COMMAND_BUTTON_NAME, visible: true },
-    ]);
+    .concat([{ name: COMMAND_BUTTON_NAME, visible: true }]);
 
   if (typeof window.replaceScriptButtons === "function") {
     window.replaceScriptButtons(buttons);
