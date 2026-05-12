@@ -36,10 +36,10 @@ const PunctuationButtons = {
         { name: '**', left: '*', right: '*' },
         { name: '""', left: '"', right: '"' },
         { name: '()', left: '(', right: ')' },
-        { name: '\uFF0C', left: '\uFF0C', right: '' },
-        { name: '\u3002', left: '\u3002', right: '' },
-        { name: '\uFF1F', left: '\uFF1F', right: '' },
-        { name: '\uFF01', left: '\uFF01', right: '' },
+        { name: '，', left: '，', right: '' },
+        { name: '。', left: '。', right: '' },
+        { name: '？', left: '？', right: '' },
+        { name: '！', left: '！', right: '' },
         { name: '/', left: '/', right: '' }
     ],
 
@@ -223,9 +223,9 @@ const PunctuationButtons = {
     copyToClipboard: (text, showToast = true) => {
         const value = String(text ?? '');
         const notifySuccess = () => {
-            if (showToast && window.toastr) window.toastr.success('\u6307\u4EE4\u5DF2\u590D\u5236');
+            if (showToast && window.toastr) window.toastr.success('指令已复制');
         };
-        const notifyManual = () => window.prompt('\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u590D\u5236\uFF1A', value);
+        const notifyManual = () => window.prompt('复制失败，请手动复制：', value);
         // 同步后备复制方案：避免异步导致浏览器权限拦截
         function fallbackCopy(str) {
             let success = false;
@@ -449,7 +449,7 @@ const PunctuationButtons = {
         const popupFunc = window.SillyTavern?.callGenericPopup || window.callGenericPopup || context.callGenericPopup;
         const popupOwner = window.SillyTavern?.callGenericPopup ? window.SillyTavern : (window.callGenericPopup ? window : context);
         if (!popupFunc || !window.jQuery) {
-            window.toastr?.error('\u65E0\u6CD5\u6253\u5F00\u5F39\u7A97\uFF1A\u5F53\u524D\u73AF\u5883\u7F3A\u5C11\u539F\u751F\u5F39\u7A97 API \u6216 jQuery\u3002');
+            window.toastr?.error('无法打开弹窗：当前环境缺少原生弹窗 API 或 jQuery。');
             return;
         }
         const popupOptions = { ...options };
@@ -871,15 +871,15 @@ const PunctuationButtons = {
             <div class="punct-settings">
                 ${PunctuationButtons.baseCss()}
                 <div class="punct-tabs monkey-main-tabs">
-                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'commands' ? 'active' : ''}" data-main-view="commands">\u6307\u4EE4\u4ED3\u5E93</button>
-                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'symbols' ? 'active' : ''}" data-main-view="symbols">\u7B26\u53F7</button>
+                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'commands' ? 'active' : ''}" data-main-view="commands">指令仓库</button>
+                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'symbols' ? 'active' : ''}" data-main-view="symbols">符号</button>
                 </div>
                 <div data-main-panel="commands">
                 <div class="punct-head">
-                    <div class="punct-title">\u5E38\u7528\u6307\u4EE4\u5E93</div>
+                    <div class="punct-title">常用指令库</div>
                     <div style="display:flex; gap:8px;">
-                        <button class="punct-action" id="cmd-import-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="\u5408\u5E76\u5BFC\u5165JSON\u6587\u4EF6">\uD83D\uDCE5 \u5BFC\u5165</button>
-                        <button class="punct-action" id="cmd-export-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="\u5BFC\u51FA\u6240\u6709\u6570\u636E\u5907\u4EFD">\uD83D\uDCE4 \u5BFC\u51FA</button>
+                        <button class="punct-action" id="cmd-import-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="合并导入JSON文件">📥 导入</button>
+                        <button class="punct-action" id="cmd-export-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="导出所有数据备份">📤 导出</button>
                         <input type="file" id="cmd-import-file" accept=".json" style="display:none;">
                     </div>
                 </div>
@@ -889,51 +889,51 @@ const PunctuationButtons = {
                 </div>
 
                 <div class="cmd-toolbar">
-                    <input type="text" class="cmd-search" id="cmd-search-input" placeholder="\u641C\u7D22\u6307\u4EE4\u6807\u9898\u3001\u5185\u5BB9\u6216\u6807\u7B7E...">
-                    <button class="punct-action" id="cmd-toggle-cat-btn" style="height:38px; padding:0 12px;" title="\u8BBE\u7F6E\u5F53\u524D\u5206\u7C7B\u7684\u524D\u540E\u7F00">\u2699\uFE0F \u683C\u5F0F</button>
-                    <button class="punct-action" id="cmd-toggle-editor-btn" style="height:38px;">\u2795 \u65B0\u5EFA</button>
+                    <input type="text" class="cmd-search" id="cmd-search-input" placeholder="搜索指令标题、内容或标签...">
+                    <button class="punct-action" id="cmd-toggle-cat-btn" style="height:38px; padding:0 12px;" title="设置当前分类的前后缀">⚙️ 格式</button>
+                    <button class="punct-action" id="cmd-toggle-editor-btn" style="height:38px;">➕ 新建</button>
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; min-height: 28px;">
                     <div class="cmd-filter-bar" id="cmd-filter-container"></div>
-                    <button class="tag-manage-btn" id="cmd-manage-tags-btn">\u7BA1\u7406\u6807\u7B7E</button>
+                    <button class="tag-manage-btn" id="cmd-manage-tags-btn">管理标签</button>
                 </div>
 
                 <div class="cmd-editor-wrap" id="cmd-cat-panel">
                     <div class="punct-field" style="margin-bottom:12px;">
-                        <label>\u5F53\u524D\u5206\u7C7B\u3010<span id="current-cat-name" style="color:#000; font-size:14px; font-weight:800;"></span>\u3011\u7684\u524D\u540E\u7F00\u8BBE\u7F6E</label>
+                        <label>当前分类【<span id="current-cat-name" style="color:#000; font-size:14px; font-weight:800;"></span>】的前后缀设置</label>
                     </div>
                     <div class="punct-field">
-                        <label>\u524D\u7F00\u5185\u5BB9</label>
-                        <input type="text" id="cmd-cat-prefix" placeholder="\u5982: [\u52A8\u4F5C\uFF1A" style="font-size:14px; padding:10px;">
+                        <label>前缀内容</label>
+                        <input type="text" id="cmd-cat-prefix" placeholder="如: [动作：" style="font-size:14px; padding:10px;">
                     </div>
                     <div class="punct-field">
-                        <label>\u540E\u7F00\u5185\u5BB9</label>
-                        <input type="text" id="cmd-cat-suffix" placeholder="\u5982: ]" style="font-size:14px; padding:10px;">
+                        <label>后缀内容</label>
+                        <input type="text" id="cmd-cat-suffix" placeholder="如: ]" style="font-size:14px; padding:10px;">
                     </div>
                     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-                        <button class="punct-action" id="cmd-cat-cancel-btn" style="background:#fff; color:#000;">\u53D6\u6D88</button>
-                        <button class="punct-action" id="cmd-cat-save-btn" style="background:#000; color:#fff;">\u4FDD\u5B58\u683C\u5F0F</button>
+                        <button class="punct-action" id="cmd-cat-cancel-btn" style="background:#fff; color:#000;">取消</button>
+                        <button class="punct-action" id="cmd-cat-save-btn" style="background:#000; color:#fff;">保存格式</button>
                     </div>
                 </div>
 
                 <div class="cmd-editor-wrap" id="cmd-editor-panel">
                     <div class="punct-field">
-                        <input type="text" id="cmd-input-title" placeholder="\u6307\u4EE4\u6807\u9898 (\u9009\u586B\uFF0C\u9ED8\u8BA4\u622A\u53D6\u5185\u5BB9\u524D10\u5B57)">
+                        <input type="text" id="cmd-input-title" placeholder="指令标题 (选填，默认截取内容前10字)">
                     </div>
                     
                     <div class="punct-field">
                         <div class="cmd-quick-inserts">${quickInsertsHtml}</div>
-                        <textarea id="cmd-input-text" rows="3" placeholder="\u8F93\u5165\u6307\u4EE4\u5185\u5BB9... (\u5FC5\u586B)"></textarea>
+                        <textarea id="cmd-input-text" rows="3" placeholder="输入指令内容... (必填)"></textarea>
                     </div>
                     
                     <div class="punct-field">
-                        <label>\u9009\u62E9\u6216\u65B0\u5EFA\u6807\u7B7E (\u53EF\u591A\u9009)</label>
+                        <label>选择或新建标签 (可多选)</label>
                         <div class="cmd-tag-editor" id="cmd-editor-tags"></div>
                     </div>
                     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-                        <button class="punct-action" id="cmd-cancel-btn" style="background:#fff; color:#000;">\u53D6\u6D88</button>
-                        <button class="punct-action" id="cmd-save-btn" style="background:#000; color:#fff;">\u4FDD\u5B58\u6307\u4EE4</button>
+                        <button class="punct-action" id="cmd-cancel-btn" style="background:#fff; color:#000;">取消</button>
+                        <button class="punct-action" id="cmd-save-btn" style="background:#000; color:#fff;">保存指令</button>
                     </div>
                 </div>
 
@@ -941,15 +941,15 @@ const PunctuationButtons = {
                 </div>
                 <div data-main-panel="symbols" style="display:none;">
                     <div class="punct-head">
-                        <div class="punct-title">\u7B26\u53F7\u6309\u94AE\u8BBE\u7F6E</div>
+                        <div class="punct-title">符号按钮设置</div>
                         <label class="punct-action" style="gap:8px; cursor:pointer;">
                             <input type="checkbox" id="symbol-inline-toggle" style="width:auto;" ${PunctuationButtons.getInlineSymbolsEnabled() ? 'checked' : ''}>
-                            <span>\u663E\u793A\u7B26\u53F7</span>
+                            <span>显示符号</span>
                         </label>
                     </div>
                     <div class="punct-tabs" id="symbol-tabs-container">
-                        <button class="punct-tab active" data-symbol-view="add">\u65B0\u589E</button>
-                        <button class="punct-tab" data-symbol-view="edit">\u7F16\u8F91</button>
+                        <button class="punct-tab active" data-symbol-view="add">新增</button>
+                        <button class="punct-tab" data-symbol-view="edit">编辑</button>
                     </div>
                     <div class="punct-panel" id="symbol-content"></div>
                 </div>
@@ -968,13 +968,13 @@ const PunctuationButtons = {
             
             if (isPromptMode) {
                 $input.val(options.defaultVal || '').show();
-                $wrap.find('#custom-modal-ok').css('background', '#222').text('\u786E\u5B9A');
+                $wrap.find('#custom-modal-ok').css('background', '#222').text('确定');
             } else {
                 $input.hide();
                 if (options.isAlert) {
-                    $wrap.find('#custom-modal-ok').css('background', '#222').text('\u6211\u77E5\u9053\u4E86');
+                    $wrap.find('#custom-modal-ok').css('background', '#222').text('我知道了');
                 } else {
-                    $wrap.find('#custom-modal-ok').css('background', '#000').text('\u786E\u5B9A\u64CD\u4F5C');
+                    $wrap.find('#custom-modal-ok').css('background', '#000').text('确定操作');
                 }
             }
             
@@ -998,23 +998,23 @@ const PunctuationButtons = {
 
         const renderSymbolAdd = () => {
             $wrap.find('#symbol-content').html(`
-                <div class="punct-field"><label>\u7C7B\u578B</label><select data-add-type><option value="single">\u5355\u72EC\u6807\u70B9</option><option value="pair">\u6210\u5BF9\u6807\u70B9</option></select></div>
-                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-add-name placeholder="\u663E\u793A\u5728\u6309\u94AE\u4E0A"></div>
+                <div class="punct-field"><label>类型</label><select data-add-type><option value="single">单独标点</option><option value="pair">成对标点</option></select></div>
+                <div class="punct-field"><label>按钮名称</label><input data-add-name placeholder="显示在按钮上"></div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div class="punct-field"><label data-left-label>\u8981\u63D2\u5165\u7684\u7B26\u53F7</label><input data-add-left></div>
-                    <div class="punct-field" data-right-wrap style="display:none;"><label>\u53F3\u4FA7\u7B26\u53F7</label><input data-add-right></div>
+                    <div class="punct-field"><label data-left-label>要插入的符号</label><input data-add-left></div>
+                    <div class="punct-field" data-right-wrap style="display:none;"><label>右侧符号</label><input data-add-right></div>
                 </div>
-                <div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-save-add style="background:#000; color:#fff;">\u4FDD\u5B58</button></div>
+                <div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-save-add style="background:#000; color:#fff;">保存</button></div>
             `);
             $wrap.find('[data-add-type]').on('change', function () {
                 const isPair = window.jQuery(this).val() === 'pair';
                 $wrap.find('[data-right-wrap]').toggle(isPair);
-                $wrap.find('[data-left-label]').text(isPair ? '\u5DE6\u4FA7\u7B26\u53F7' : '\u8981\u63D2\u5165\u7684\u7B26\u53F7');
+                $wrap.find('[data-left-label]').text(isPair ? '左侧符号' : '要插入的符号');
             });
             $wrap.find('[data-save-add]').on('click', () => {
                 const type = $wrap.find('[data-add-type]').val(), name = String($wrap.find('[data-add-name]').val() || '').trim();
                 const left = String($wrap.find('[data-add-left]').val() || ''), right = type === 'pair' ? String($wrap.find('[data-add-right]').val() || '') : '';
-                if (!name || !left || (type === 'pair' && !right)) return showModal({msg: '\u8BF7\u586B\u5B8C\u5FC5\u586B\u9879\u3002', isAlert:true});
+                if (!name || !left || (type === 'pair' && !right)) return showModal({msg: '请填完必填项。', isAlert:true});
                 const custom = PunctuationButtons.loadCustomSymbols(); custom.push({ name, left, right });
                 PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.forgetDeletedName(name);
                 PunctuationButtons.register(); renderSymbolEdit();
@@ -1022,20 +1022,20 @@ const PunctuationButtons = {
         };
         const renderSymbolEditForm = (item, oldName) => {
             $wrap.find('#symbol-content').html(`
-                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-edit-name value="${PunctuationButtons.escapeHtml(item.name)}"></div>
+                <div class="punct-field"><label>按钮名称</label><input data-edit-name value="${PunctuationButtons.escapeHtml(item.name)}"></div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div class="punct-field"><label>\u5DE6\u4FA7\u7B26\u53F7</label><input data-edit-left value="${PunctuationButtons.escapeHtml(item.left)}"></div>
-                    <div class="punct-field"><label>\u53F3\u4FA7\u7B26\u53F7 (\u53EF\u7559\u7A7A)</label><input data-edit-right value="${PunctuationButtons.escapeHtml(item.right || '')}"></div>
+                    <div class="punct-field"><label>左侧符号</label><input data-edit-left value="${PunctuationButtons.escapeHtml(item.left)}"></div>
+                    <div class="punct-field"><label>右侧符号 (可留空)</label><input data-edit-right value="${PunctuationButtons.escapeHtml(item.right || '')}"></div>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
-                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">\u8FD4\u56DE</button>
-                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">\u4FDD\u5B58</button>
+                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">返回</button>
+                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">保存</button>
                 </div>
             `);
             $wrap.find('[data-back-edit]').on('click', renderSymbolEdit);
             $wrap.find('[data-save-edit]').on('click', () => {
                 const name = String($wrap.find('[data-edit-name]').val() || '').trim(), left = String($wrap.find('[data-edit-left]').val() || ''), right = String($wrap.find('[data-edit-right]').val() || '');
-                if (!name || !left) return showModal({msg:'\u5FC5\u586B\u9879\u4E0D\u80FD\u4E3A\u7A7A', isAlert:true});
+                if (!name || !left) return showModal({msg:'必填项不能为空', isAlert:true});
                 if (name !== oldName) { PunctuationButtons.rememberDeletedName(oldName); PunctuationButtons.hideButtonByName(oldName); PunctuationButtons.forgetDeletedName(name); }
                 const custom = PunctuationButtons.loadCustomSymbols(), idx = custom.findIndex(i => i.name === oldName);
                 if(idx !== -1) { custom[idx] = { name, left, right }; PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.register(); renderSymbolEdit(); }
@@ -1046,13 +1046,13 @@ const PunctuationButtons = {
             const rows = all.length ? all.map((item) => {
                 const isDefault = defaultNames.has(item.name);
                 return `<div class="cmd-row symbol-edit-row" data-name="${PunctuationButtons.escapeHtml(item.name)}" draggable="true" style="align-items:center; padding:10px 14px;">
-                    <span class="drag-handle" title="\u62D6\u52A8\u6392\u5E8F">=</span>
+                    <span class="drag-handle" title="拖动排序">=</span>
                     <input type="checkbox" data-pick>
                     <div class="cmd-content"><div class="cmd-text" style="font-weight:600; font-size:14px; color:#111;">${PunctuationButtons.escapeHtml(item.name)}</div></div>
-                    <button class="punct-action" data-edit-one ${isDefault ? 'style="opacity:.45;" title="\u9ED8\u8BA4\u6309\u94AE\u53EA\u80FD\u5220"' : ''}>\u4FEE\u6539</button>
+                    <button class="punct-action" data-edit-one ${isDefault ? 'style="opacity:.45;" title="默认按钮只能删"' : ''}>修改</button>
                 </div>`;
-            }).join('') : `<div style="text-align:center; padding:20px; color:#999;">\u6682\u65E0\u53EF\u7F16\u8F91\u6309\u94AE</div>`;
-            $wrap.find('#symbol-content').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>\u5220\u9664\u9009\u4E2D</button></div>`);
+            }).join('') : `<div style="text-align:center; padding:20px; color:#999;">暂无可编辑按钮</div>`;
+            $wrap.find('#symbol-content').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>删除选中</button></div>`);
             const $list = $wrap.find('.cmd-list-wrap');
             let draggedRow = null;
             let pointerDragId = null;
@@ -1113,16 +1113,16 @@ const PunctuationButtons = {
              
             $wrap.find('[data-edit-one]').on('click', function () {
                 const name = window.jQuery(this).closest('.cmd-row').attr('data-name');
-                if (defaultNames.has(name)) return showModal({msg: '\u9ED8\u8BA4\u81EA\u5E26\u6807\u70B9\u4EC5\u652F\u6301\u5220\u9664', isAlert:true});
+                if (defaultNames.has(name)) return showModal({msg: '默认自带标点仅支持删除', isAlert:true});
                 const item = PunctuationButtons.loadCustomSymbols().find(i => i.name === name);
                 if(item) renderSymbolEditForm(item, name);
             });
             
             $wrap.find('[data-delete-picked]').on('click', () => {
                 const picked = $wrap.find('[data-pick]:checked').map(function () { return window.jQuery(this).closest('.cmd-row').attr('data-name'); }).get();
-                if (!picked.length) return showModal({msg:'\u8BF7\u5148\u52FE\u9009', isAlert:true});
+                if (!picked.length) return showModal({msg:'请先勾选', isAlert:true});
                 showModal({
-                    msg: `\u786E\u5B9A\u8981\u5220\u9664\u9009\u4E2D\u7684 ${picked.length} \u4E2A\u6807\u70B9\u6309\u94AE\u5417\uFF1F`,
+                    msg: `确定要删除选中的 ${picked.length} 个标点按钮吗？`,
                     onOk: () => { PunctuationButtons.deleteCustomByNames(picked); renderSymbolEdit(); }
                 });
             });
@@ -1158,7 +1158,7 @@ const PunctuationButtons = {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            if (window.toastr) toastr.success('\u6570\u636E\u5BFC\u51FA\u6210\u529F\uFF01');
+            if (window.toastr) toastr.success('数据导出成功！');
         });
 
         $wrap.find('#cmd-import-btn').on('click', () => {
@@ -1178,7 +1178,7 @@ const PunctuationButtons = {
                     }
                     
                     showModal({
-                        msg: '\u5373\u5C06\u5BFC\u5165\u5907\u4EFD\u6570\u636E\uFF01\n\u4E3A\u9632\u6B62\u8BEF\u5220\uFF0C\u5BFC\u5165\u7684\u6570\u636E\u5C06\u4E0E\u73B0\u6709\u6570\u636E\u8FDB\u884C\u3010\u5408\u5E76\u3011\u3002\n\u662F\u5426\u7EE7\u7EED\uFF1F',
+                        msg: '即将导入备份数据！\n为防止误删，导入的数据将与现有数据进行【合并】。\n是否继续？',
                         onOk: () => {
                             let importedCmds = Array.isArray(data.commands) ? data.commands : [];
                             let existingCmds = PunctuationButtons.loadCommands();
@@ -1218,11 +1218,11 @@ const PunctuationButtons = {
                             }
 
                             renderUI();
-                            if (window.toastr) toastr.success(`\u5BFC\u5165\u6210\u529F\uFF01\u5171\u65B0\u589E ${addedCmdsCount} \u6761\u6307\u4EE4\u3002`);
+                            if (window.toastr) toastr.success(`导入成功！共新增 ${addedCmdsCount} 条指令。`);
                         }
                     });
                 } catch(err) {
-                    showModal({ msg: '\u8BFB\u53D6\u5931\u8D25\uFF1A\u6587\u4EF6\u683C\u5F0F\u4E0D\u6B63\u786E\u6216\u5DF2\u635F\u574F\uFF01', isAlert: true });
+                    showModal({ msg: '读取失败：文件格式不正确或已损坏！', isAlert: true });
                 }
                 $wrap.find('#cmd-import-file').val('');
             };
@@ -1265,17 +1265,17 @@ const PunctuationButtons = {
                 $wrap.find('#cmd-manage-tags-btn')
                      .html(`<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`)
                      .addClass('back-mode')
-                     .attr('title', '\u8FD4\u56DE\u5217\u8868');
+                     .attr('title', '返回列表');
                 
                 const manageHeader = `
                     <div style="display:flex; gap:8px; margin-bottom:12px;">
-                        <input type="text" id="manage-new-tag-input" class="cmd-search" placeholder="\u8F93\u5165\u65B0\u6807\u7B7E\u540D\u79F0..." style="height:38px;">
-                        <button class="punct-action" id="manage-add-tag-btn" style="height:38px; background:#000; color:#fff; padding:0 16px;">\u65B0\u589E\u6807\u7B7E</button>
+                        <input type="text" id="manage-new-tag-input" class="cmd-search" placeholder="输入新标签名称..." style="height:38px;">
+                        <button class="punct-action" id="manage-add-tag-btn" style="height:38px; background:#000; color:#fff; padding:0 16px;">新增标签</button>
                     </div>
                 `;
 
                 if (globalTags.length === 0) {
-                    $wrap.find('#cmd-list-container').html(manageHeader + `<div style="text-align:center; padding:30px; color:#999;">\u5F53\u524D\u6CA1\u6709\u4EFB\u4F55\u6807\u7B7E</div>`);
+                    $wrap.find('#cmd-list-container').html(manageHeader + `<div style="text-align:center; padding:30px; color:#999;">当前没有任何标签</div>`);
                 } else {
                     const tagRows = globalTags.map(tag => `
                         <div class="cmd-row" style="align-items:center;">
@@ -1283,8 +1283,8 @@ const PunctuationButtons = {
                                 <div class="cmd-tag active" style="cursor:default; box-shadow:none;">${PunctuationButtons.escapeHtml(tag)}</div>
                             </div>
                             <div style="display:flex; gap:8px;">
-                                <button class="punct-action tag-edit-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px;">\u91CD\u547D\u540D</button>
-                                <button class="punct-action tag-del-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px; color:#000;">\u5220\u9664</button>
+                                <button class="punct-action tag-edit-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px;">重命名</button>
+                                <button class="punct-action tag-del-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px; color:#000;">删除</button>
                             </div>
                         </div>
                     `).join('');
@@ -1296,7 +1296,7 @@ const PunctuationButtons = {
             $wrap.find('.cmd-toolbar, #cmd-filter-container').show();
             
             $wrap.find('#cmd-manage-tags-btn')
-                 .html('\u7BA1\u7406\u6807\u7B7E')
+                 .html('管理标签')
                  .removeClass('back-mode')
                  .removeAttr('title');
             
@@ -1307,7 +1307,7 @@ const PunctuationButtons = {
                 $wrap.find('#cmd-cat-panel').css('display', 'none');
             }
 
-            if (state.editingId || $wrap.find('#cmd-toggle-editor-btn').text().includes('\u6536\u8D77')) {
+            if (state.editingId || $wrap.find('#cmd-toggle-editor-btn').text().includes('收起')) {
                 $wrap.find('#cmd-editor-panel').css('display', 'block');
             } else {
                 $wrap.find('#cmd-editor-panel').css('display', 'none');
@@ -1315,14 +1315,14 @@ const PunctuationButtons = {
 
             $wrap.find('#cmd-filter-container').html(
                 globalTags.map(tag => `<div class="cmd-tag ${state.filterTags.includes(tag) ? 'active' : ''}" data-tag="${PunctuationButtons.escapeHtml(tag)}">${PunctuationButtons.escapeHtml(tag)}</div>`).join('')
-                + (state.filterTags.length > 0 ? `<div class="cmd-tag active" style="background:#000;" id="cmd-clear-filter">\u2716 \u6E05\u9664\u7B5B\u9009</div>` : '')
+                + (state.filterTags.length > 0 ? `<div class="cmd-tag active" style="background:#000;" id="cmd-clear-filter">✖ 清除筛选</div>` : '')
             );
 
             const editorAvailableTags = Array.from(new Set([...globalTags, ...state.editorTags])).sort();
             
             $wrap.find('#cmd-editor-tags').html(
                 editorAvailableTags.map(tag => `<div class="cmd-tag ${state.editorTags.includes(tag) ? 'active' : ''} editor-tag-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}">${PunctuationButtons.escapeHtml(tag)}</div>`).join('')
-                + `<div class="cmd-tag-add"><input type="text" id="cmd-new-tag-input" placeholder="+\u65B0\u6807\u7B7E"><button id="cmd-add-tag-btn" style="border:none;background:none;cursor:pointer;font-weight:bold;color:#666;">\u2714</button></div>`
+                + `<div class="cmd-tag-add"><input type="text" id="cmd-new-tag-input" placeholder="+新标签"><button id="cmd-add-tag-btn" style="border:none;background:none;cursor:pointer;font-weight:bold;color:#666;">✔</button></div>`
             );
 
             const cmdsInTab = allCmds.filter(c => c.category === state.activeTab);
@@ -1347,7 +1347,7 @@ const PunctuationButtons = {
             });
 
             if (displayCmds.length === 0) {
-                $wrap.find('#cmd-list-container').html(`<div style="text-align:center; padding:40px; color:#999;">\u6CA1\u6709\u627E\u5230\u6307\u4EE4</div>`);
+                $wrap.find('#cmd-list-container').html(`<div style="text-align:center; padding:40px; color:#999;">没有找到指令</div>`);
             } else {
                 const rows = displayCmds.map(cmd => {
                     const displayTitle = cmd.title || cmd.text.substring(0, 10);
@@ -1359,9 +1359,9 @@ const PunctuationButtons = {
                             ${cmd.tags && cmd.tags.length ? `<div class="cmd-tags-display">${cmd.tags.map(t => `<span class="cmd-tag-mini">${PunctuationButtons.escapeHtml(t)}</span>`).join('')}</div>` : ''}
                         </div>
                         <div class="cmd-actions">
-                            <div class="cmd-btn-icon ${cmd.isFavorite ? 'cmd-btn-heart' : ''} fav-trigger" title="${cmd.isFavorite ? '\u53D6\u6D88\u5E38\u7528' : '\u8BBE\u4E3A\u5E38\u7528'}">${cmd.isFavorite ? '\u2764' : '\u2661'}</div>
-                            <div class="cmd-btn-icon edit-trigger" title="\u4FEE\u6539">\u270E</div>
-                            <div class="cmd-btn-icon del-trigger" style="color:#000;" title="\u5220\u9664">\u2716</div>
+                            <div class="cmd-btn-icon ${cmd.isFavorite ? 'cmd-btn-heart' : ''} fav-trigger" title="${cmd.isFavorite ? '取消常用' : '设为常用'}">${cmd.isFavorite ? '❤' : '♡'}</div>
+                            <div class="cmd-btn-icon edit-trigger" title="修改">✎</div>
+                            <div class="cmd-btn-icon del-trigger" style="color:#000;" title="删除">✖</div>
                         </div>
                     </div>
                 `});
@@ -1375,8 +1375,8 @@ const PunctuationButtons = {
             $wrap.find('#cmd-input-title').val('');
             $wrap.find('#cmd-input-text').val('');
             $wrap.find('#cmd-editor-panel').css('display', 'none');
-            $wrap.find('#cmd-toggle-editor-btn').text('\u2795 \u65B0\u5EFA');
-            $wrap.find('#cmd-save-btn').text('\u4FDD\u5B58\u6307\u4EE4');
+            $wrap.find('#cmd-toggle-editor-btn').text('➕ 新建');
+            $wrap.find('#cmd-save-btn').text('保存指令');
             renderUI();
         };
 
@@ -1416,7 +1416,7 @@ const PunctuationButtons = {
 
             if (state.editingId) {
                 state.editingId = null;
-                $wrap.find('#cmd-save-btn').text('\u4FDD\u5B58\u6307\u4EE4');
+                $wrap.find('#cmd-save-btn').text('保存指令');
             }
 
             renderUI();
@@ -1452,7 +1452,7 @@ const PunctuationButtons = {
             PunctuationButtons.saveCategorySettings(cats);
             
             renderUI();
-            if (window.toastr) toastr.success('\u683C\u5F0F\u4FDD\u5B58\u6210\u529F');
+            if (window.toastr) toastr.success('格式保存成功');
         });
 
         $wrap.on('click', '#cmd-manage-tags-btn', () => {
@@ -1474,14 +1474,14 @@ const PunctuationButtons = {
                 renderUI();
                 setTimeout(() => $wrap.find('#manage-new-tag-input').focus(), 10);
             } else {
-                showModal({msg: '\u6807\u7B7E\u5DF2\u5B58\u5728', isAlert: true});
+                showModal({msg: '标签已存在', isAlert: true});
             }
         });
 
         $wrap.on('click', '.tag-edit-btn', function() {
             const oldTag = String($(this).attr('data-tag'));
             showModal({
-                msg: `\u5C06\u6807\u7B7E [${oldTag}] \u91CD\u547D\u540D\u4E3A:`,
+                msg: `将标签 [${oldTag}] 重命名为:`,
                 prompt: true,
                 defaultVal: oldTag,
                 onOk: (newTag) => {
@@ -1509,7 +1509,7 @@ const PunctuationButtons = {
         $wrap.on('click', '.tag-del-btn', function() {
             const tag = String($(this).attr('data-tag'));
             showModal({
-                msg: `\u786E\u5B9A\u8981\u5168\u5C40\u5220\u9664\u6807\u7B7E [${tag}] \u5417\uFF1F\n\u5305\u542B\u6B64\u6807\u7B7E\u7684\u6307\u4EE4\u4E0D\u4F1A\u88AB\u5220\u9664\uFF0C\u53EA\u662F\u5931\u53BB\u8BE5\u6807\u7B7E\u3002`,
+                msg: `确定要全局删除标签 [${tag}] 吗？\n包含此标签的指令不会被删除，只是失去该标签。`,
                 onOk: () => {
                     let cmds = PunctuationButtons.loadCommands();
                     cmds.forEach(cmd => { if(cmd.tags && cmd.tags.includes(tag)) { cmd.tags = cmd.tags.filter(t => t !== tag); } });
@@ -1576,7 +1576,7 @@ const PunctuationButtons = {
                 resetEditor(); 
                 $wrap.find('#cmd-toggle-cat-btn').removeClass('active'); 
                 panel.css('display', 'block'); 
-                $(this).text('\u25B2 \u6536\u8D77'); 
+                $(this).text('▲ 收起'); 
                 renderUI(); 
             }
         });
@@ -1585,7 +1585,7 @@ const PunctuationButtons = {
 
         $wrap.find('#cmd-save-btn').on('click', () => {
             const text = $wrap.find('#cmd-input-text').val().trim();
-            if (!text) return showModal({msg: '\u6307\u4EE4\u5185\u5BB9\u4E0D\u80FD\u4E3A\u7A7A\uFF01', isAlert: true});
+            if (!text) return showModal({msg: '指令内容不能为空！', isAlert: true});
             
             const rawTitle = $wrap.find('#cmd-input-title').val().trim();
             const title = rawTitle || text.substring(0, 10);
@@ -1639,8 +1639,8 @@ const PunctuationButtons = {
                 
                 $wrap.find('#cmd-toggle-cat-btn').removeClass('active');
                 $wrap.find('#cmd-editor-panel').css('display', 'block');
-                $wrap.find('#cmd-toggle-editor-btn').text('\u25B2 \u6536\u8D77');
-                $wrap.find('#cmd-save-btn').text('\u4FDD\u5B58\u4FEE\u6539');
+                $wrap.find('#cmd-toggle-editor-btn').text('▲ 收起');
+                $wrap.find('#cmd-save-btn').text('保存修改');
                 renderUI();
             }
         });
@@ -1651,7 +1651,7 @@ const PunctuationButtons = {
             const cmd = PunctuationButtons.loadCommands().find(c => c.id === id);
             if (!cmd) return;
             showModal({
-                msg: `\u4F60\u786E\u5B9A\u5220\u9664 [${cmd.category}] \u4E0B\u9762\u7684 1 \u6761\u6307\u4EE4\u5417\uFF1F`,
+                msg: `你确定删除 [${cmd.category}] 下面的 1 条指令吗？`,
                 onOk: () => {
                     let cmds = PunctuationButtons.loadCommands().filter(c => c.id !== id);
                     PunctuationButtons.saveCommands(cmds); renderUI();
@@ -1660,7 +1660,7 @@ const PunctuationButtons = {
         });
 
         renderMainView();
-        PunctuationButtons.openPopup($wrap, { okButton: '\u5173\u95ED', forceCustom: true });
+        PunctuationButtons.openPopup($wrap, { okButton: '关闭', forceCustom: true });
     },
 
     openSettings: () => {
@@ -1674,10 +1674,10 @@ const PunctuationButtons = {
         const $wrap = $(`
             <div class="punct-settings">
                 ${PunctuationButtons.baseCss()}
-                <div class="punct-head"><div class="punct-title">\u7B26\u53F7\u6309\u94AE\u8BBE\u7F6E</div></div>
+                <div class="punct-head"><div class="punct-title">符号按钮设置</div></div>
                 <div class="punct-tabs">
-                    <button class="punct-tab active" data-view="add">\u65B0\u589E</button>
-                    <button class="punct-tab" data-view="edit">\u7F16\u8F91</button>
+                    <button class="punct-tab active" data-view="add">新增</button>
+                    <button class="punct-tab" data-view="edit">编辑</button>
                 </div>
                 <div class="punct-panel" data-content></div>
                 ${PunctuationButtons.modalHtml}
@@ -1690,10 +1690,10 @@ const PunctuationButtons = {
             modalCallback = options.onOk;
             $wrap.find('#custom-modal-input').hide();
             if (options.isAlert) {
-                $wrap.find('#custom-modal-ok').css('background', '#222').text('\u6211\u77E5\u9053\u4E86');
+                $wrap.find('#custom-modal-ok').css('background', '#222').text('我知道了');
                 $wrap.find('#custom-modal-cancel').hide();
             } else {
-                $wrap.find('#custom-modal-ok').css('background', '#000').text('\u786E\u5B9A\u5220\u9664');
+                $wrap.find('#custom-modal-ok').css('background', '#000').text('确定删除');
                 $wrap.find('#custom-modal-cancel').show();
             }
             $wrap.find('#custom-modal-layer').fadeIn(150);
@@ -1703,23 +1703,23 @@ const PunctuationButtons = {
 
         const renderAdd = () => {
             $wrap.find('[data-content]').html(`
-                <div class="punct-field"><label>\u7C7B\u578B</label><select data-add-type><option value="single">\u5355\u72EC\u6807\u70B9</option><option value="pair">\u6210\u5BF9\u6807\u70B9</option></select></div>
-                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-add-name placeholder="\u663E\u793A\u5728\u6309\u94AE\u4E0A"></div>
+                <div class="punct-field"><label>类型</label><select data-add-type><option value="single">单独标点</option><option value="pair">成对标点</option></select></div>
+                <div class="punct-field"><label>按钮名称</label><input data-add-name placeholder="显示在按钮上"></div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div class="punct-field"><label data-left-label>\u8981\u63D2\u5165\u7684\u7B26\u53F7</label><input data-add-left></div>
-                    <div class="punct-field" data-right-wrap style="display:none;"><label>\u53F3\u4FA7\u7B26\u53F7</label><input data-add-right></div>
+                    <div class="punct-field"><label data-left-label>要插入的符号</label><input data-add-left></div>
+                    <div class="punct-field" data-right-wrap style="display:none;"><label>右侧符号</label><input data-add-right></div>
                 </div>
-                <div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-save-add style="background:#000; color:#fff;">\u4FDD\u5B58</button></div>
+                <div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-save-add style="background:#000; color:#fff;">保存</button></div>
             `);
             $wrap.find('[data-add-type]').on('change', function () {
                 const isPair = window.jQuery(this).val() === 'pair';
                 $wrap.find('[data-right-wrap]').toggle(isPair);
-                $wrap.find('[data-left-label]').text(isPair ? '\u5DE6\u4FA7\u7B26\u53F7' : '\u8981\u63D2\u5165\u7684\u7B26\u53F7');
+                $wrap.find('[data-left-label]').text(isPair ? '左侧符号' : '要插入的符号');
             });
             $wrap.find('[data-save-add]').on('click', () => {
                 const type = $wrap.find('[data-add-type]').val(), name = String($wrap.find('[data-add-name]').val() || '').trim();
                 const left = String($wrap.find('[data-add-left]').val() || ''), right = type === 'pair' ? String($wrap.find('[data-add-right]').val() || '') : '';
-                if (!name || !left || (type === 'pair' && !right)) return showModal({msg: '\u8BF7\u586B\u5B8C\u5FC5\u586B\u9879\u3002', isAlert:true});
+                if (!name || !left || (type === 'pair' && !right)) return showModal({msg: '请填完必填项。', isAlert:true});
                 const custom = PunctuationButtons.loadCustomSymbols(); custom.push({ name, left, right });
                 PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.forgetDeletedName(name);
                 PunctuationButtons.register(); $wrap.find('[data-view="edit"]').click();
@@ -1730,13 +1730,13 @@ const PunctuationButtons = {
             const rows = all.length ? all.map((item) => {
                 const isDefault = defaultNames.has(item.name);
                 return `<div class="cmd-row symbol-edit-row" data-name="${PunctuationButtons.escapeHtml(item.name)}" draggable="true" style="align-items:center; padding:10px 14px;">
-                    <span class="drag-handle" title="\u62D6\u52A8\u6392\u5E8F">=</span>
+                    <span class="drag-handle" title="拖动排序">=</span>
                     <input type="checkbox" data-pick>
                     <div class="cmd-content"><div class="cmd-text" style="font-weight:600; font-size:14px; color:#111;">${PunctuationButtons.escapeHtml(item.name)}</div></div>
-                    <button class="punct-action" data-edit-one ${isDefault ? 'style="opacity:.45;" title="\u9ED8\u8BA4\u6309\u94AE\u53EA\u80FD\u5220"' : ''}>\u4FEE\u6539</button>
+                    <button class="punct-action" data-edit-one ${isDefault ? 'style="opacity:.45;" title="默认按钮只能删"' : ''}>修改</button>
                 </div>`;
-            }).join('') : `<div style="text-align:center; padding:20px; color:#999;">\u6682\u65E0\u53EF\u7F16\u8F91\u6309\u94AE</div>`;
-            $wrap.find('[data-content]').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>\u5220\u9664\u9009\u4E2D</button></div>`);
+            }).join('') : `<div style="text-align:center; padding:20px; color:#999;">暂无可编辑按钮</div>`;
+            $wrap.find('[data-content]').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>删除选中</button></div>`);
             const $list = $wrap.find('.cmd-list-wrap');
             let draggedRow = null;
             let pointerDragId = null;
@@ -1797,43 +1797,43 @@ const PunctuationButtons = {
              
             $wrap.find('[data-edit-one]').on('click', function () {
                 const name = window.jQuery(this).closest('.cmd-row').attr('data-name');
-                if (defaultNames.has(name)) return showModal({msg: '\u9ED8\u8BA4\u81EA\u5E26\u6807\u70B9\u4EC5\u652F\u6301\u5220\u9664', isAlert:true});
+                if (defaultNames.has(name)) return showModal({msg: '默认自带标点仅支持删除', isAlert:true});
                 const item = PunctuationButtons.loadCustomSymbols().find(i => i.name === name);
                 if(item) renderEditForm(item, name);
             });
             
             $wrap.find('[data-delete-picked]').on('click', () => {
                 const picked = $wrap.find('[data-pick]:checked').map(function () { return window.jQuery(this).closest('.cmd-row').attr('data-name'); }).get();
-                if (!picked.length) return showModal({msg:'\u8BF7\u5148\u52FE\u9009', isAlert:true});
+                if (!picked.length) return showModal({msg:'请先勾选', isAlert:true});
                 showModal({
-                    msg: `\u786E\u5B9A\u8981\u5220\u9664\u9009\u4E2D\u7684 ${picked.length} \u4E2A\u6807\u70B9\u6309\u94AE\u5417\uFF1F`,
+                    msg: `确定要删除选中的 ${picked.length} 个标点按钮吗？`,
                     onOk: () => { PunctuationButtons.deleteCustomByNames(picked); renderEdit(); }
                 });
             });
         };
         const renderEditForm = (item, oldName) => {
             $wrap.find('[data-content]').html(`
-                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-edit-name value="${PunctuationButtons.escapeHtml(item.name)}"></div>
+                <div class="punct-field"><label>按钮名称</label><input data-edit-name value="${PunctuationButtons.escapeHtml(item.name)}"></div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div class="punct-field"><label>\u5DE6\u4FA7\u7B26\u53F7</label><input data-edit-left value="${PunctuationButtons.escapeHtml(item.left)}"></div>
-                    <div class="punct-field"><label>\u53F3\u4FA7\u7B26\u53F7 (\u53EF\u7559\u7A7A)</label><input data-edit-right value="${PunctuationButtons.escapeHtml(item.right || '')}"></div>
+                    <div class="punct-field"><label>左侧符号</label><input data-edit-left value="${PunctuationButtons.escapeHtml(item.left)}"></div>
+                    <div class="punct-field"><label>右侧符号 (可留空)</label><input data-edit-right value="${PunctuationButtons.escapeHtml(item.right || '')}"></div>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
-                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">\u8FD4\u56DE</button>
-                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">\u4FDD\u5B58</button>
+                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">返回</button>
+                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">保存</button>
                 </div>
             `);
             $wrap.find('[data-back-edit]').on('click', renderEdit);
             $wrap.find('[data-save-edit]').on('click', () => {
                 const name = String($wrap.find('[data-edit-name]').val() || '').trim(), left = String($wrap.find('[data-edit-left]').val() || ''), right = String($wrap.find('[data-edit-right]').val() || '');
-                if (!name || !left) return showModal({msg:'\u5FC5\u586B\u9879\u4E0D\u80FD\u4E3A\u7A7A', isAlert:true});
+                if (!name || !left) return showModal({msg:'必填项不能为空', isAlert:true});
                 if (name !== oldName) { PunctuationButtons.rememberDeletedName(oldName); PunctuationButtons.hideButtonByName(oldName); PunctuationButtons.forgetDeletedName(name); }
                 const custom = PunctuationButtons.loadCustomSymbols(), idx = custom.findIndex(i => i.name === oldName);
                 if(idx !== -1) { custom[idx] = { name, left, right }; PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.register(); renderEdit(); }
             });
         };
         $wrap.find('[data-view]').on('click', function () { $wrap.find('.punct-tab').removeClass('active'); $(this).addClass('active'); $(this).data('view') === 'add' ? renderAdd() : renderEdit(); });
-        renderAdd(); PunctuationButtons.openPopup($wrap, { okButton: '\u5173\u95ED', forceCustom: true });
+        renderAdd(); PunctuationButtons.openPopup($wrap, { okButton: '关闭', forceCustom: true });
     },
 
     bindButton: (name, handler) => {
