@@ -30,6 +30,8 @@ const PunctuationButtons = {
     symbolBarObserver: null,
     symbolBarRetryTimer: null,
     symbolBarTextarea: null,
+    scriptButtonRetryTimer: null,
+    scriptButtonRetryCount: 0,
 
     defaultSymbols: [
         { name: '**', left: '*', right: '*' },
@@ -1849,20 +1851,37 @@ const PunctuationButtons = {
         const buttons = symbols.map((symbol) => ({ name: symbol.name, visible: true }));
         buttons.push({ name: PUNCT_SETTINGS_BUTTON, visible: true }, { name: PUNCT_CMD_BUTTON, visible: true });
 
-        if (typeof window.appendInexistentScriptButtons === 'function') window.appendInexistentScriptButtons(buttons);
-        else if (typeof window.replaceScriptButtons === 'function') window.replaceScriptButtons(buttons);
+        if (typeof window.replaceScriptButtons === 'function') window.replaceScriptButtons(buttons);
+        else if (typeof window.appendInexistentScriptButtons === 'function') window.appendInexistentScriptButtons(buttons);
+        else return false;
 
-        if (typeof window.eventOn !== 'function' || typeof window.getButtonEvent !== 'function') return;
+        PunctuationButtons.scriptButtonRetryCount = 0;
+        if (PunctuationButtons.scriptButtonRetryTimer) {
+            clearTimeout(PunctuationButtons.scriptButtonRetryTimer);
+            PunctuationButtons.scriptButtonRetryTimer = null;
+        }
+
+        if (typeof window.eventOn !== 'function' || typeof window.getButtonEvent !== 'function') return true;
         symbols.forEach((symbol) => PunctuationButtons.bindButton(symbol.name, () => PunctuationButtons.insertByName(symbol.name)));
         PunctuationButtons.bindButton(PUNCT_SETTINGS_BUTTON, () => PunctuationButtons.openToolsPanel('symbols'));
         PunctuationButtons.bindButton(PUNCT_CMD_BUTTON, () => PunctuationButtons.openToolsPanel('commands'));
+        return true;
+    },
+
+    scheduleScriptButtonRetry: () => {
+        if (PunctuationButtons.scriptButtonRetryTimer || PunctuationButtons.scriptButtonRetryCount >= 10) return;
+        PunctuationButtons.scriptButtonRetryCount += 1;
+        PunctuationButtons.scriptButtonRetryTimer = window.setTimeout(() => {
+            PunctuationButtons.scriptButtonRetryTimer = null;
+            PunctuationButtons.register();
+        }, 1000);
     },
 
     register: () => {
         PunctuationButtons.buildFloatingLauncher();
         PunctuationButtons.stopInlineSymbolBarTracking();
         document.getElementById('monkey-tools-inline-symbols')?.remove();
-        PunctuationButtons.registerScriptSymbolButtons();
+        if (!PunctuationButtons.registerScriptSymbolButtons()) PunctuationButtons.scheduleScriptButtonRetry();
     }
 };
 
