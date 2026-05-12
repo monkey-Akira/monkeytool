@@ -872,7 +872,7 @@ const PunctuationButtons = {
                 ${PunctuationButtons.baseCss()}
                 <div class="punct-tabs monkey-main-tabs">
                     <button class="punct-tab monkey-main-tab ${state.activeMainView === 'commands' ? 'active' : ''}" data-main-view="commands">指令仓库</button>
-                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'symbols' ? 'active' : ''}" data-main-view="symbols">符号</button>
+                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'symbols' ? 'active' : ''}" data-main-view="symbols">符号编辑</button>
                 </div>
                 <div data-main-panel="commands">
                 <div class="punct-head">
@@ -944,7 +944,7 @@ const PunctuationButtons = {
                         <div class="punct-title">符号按钮设置</div>
                         <label class="punct-action" style="gap:8px; cursor:pointer;">
                             <input type="checkbox" id="symbol-inline-toggle" style="width:auto;" ${PunctuationButtons.getInlineSymbolsEnabled() ? 'checked' : ''}>
-                            <span>显示符号</span>
+                            <span>快捷符号开关</span>
                         </label>
                     </div>
                     <div class="punct-tabs" id="symbol-tabs-container">
