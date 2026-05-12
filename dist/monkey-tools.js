@@ -122,7 +122,6 @@ var UI_TEXT = {
 		defaultDeleteOnly: "默认按钮只能删"
 	}
 };
-var PUNCT_SETTINGS_BUTTON = UI_TEXT.launcher.symbolSettings;
 UI_TEXT.launcher.commandRepository;
 var DEFAULT_CMD_CATEGORIES = CMD_CATEGORIES;
 var PunctuationButtons = {
@@ -133,6 +132,7 @@ var PunctuationButtons = {
 	symbolBarRetryTimer: null,
 	symbolBarTextarea: null,
 	symbolBarHideTimer: null,
+	symbolBarShowTimer: null,
 	defaultSymbols: [
 		{
 			name: "**",
@@ -764,20 +764,7 @@ var PunctuationButtons = {
 			button.style.cssText = "border:1px solid rgba(0,0,0,0.12);border-radius:999px;background:rgba(255,255,255,0.9);color:#2f343a;padding:4px 8px;cursor:pointer;font-size:12px;font-weight:600;line-height:1.2;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);";
 			bar.appendChild(button);
 		});
-		const settingsButton = document.createElement("button");
-		settingsButton.type = "button";
-		settingsButton.textContent = PUNCT_SETTINGS_BUTTON;
-		settingsButton.title = PUNCT_SETTINGS_BUTTON;
-		settingsButton.dataset.openSettings = "1";
-		settingsButton.style.cssText = "border:1px solid rgba(0,0,0,0.18);border-radius:999px;background:rgba(255,255,255,0.96);color:#111;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:700;line-height:1.2;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);";
-		bar.appendChild(settingsButton);
 		bar.addEventListener("pointerdown", (event) => {
-			if (event.target.closest("button[data-open-settings]")) {
-				event.preventDefault();
-				event.stopPropagation();
-				PunctuationButtons.openSettings();
-				return;
-			}
 			const button = event.target.closest("button[data-symbol-name]");
 			if (!button) return;
 			event.preventDefault();
@@ -793,14 +780,24 @@ var PunctuationButtons = {
 	},
 	showInlineSymbolBar: () => {
 		if (!PunctuationButtons.getInlineSymbolsEnabled()) return;
-		const bar = document.getElementById("monkey-tools-inline-symbols");
-		if (!bar) return;
+		if (!document.getElementById("monkey-tools-inline-symbols")) return;
 		if (PunctuationButtons.symbolBarHideTimer) {
 			clearTimeout(PunctuationButtons.symbolBarHideTimer);
 			PunctuationButtons.symbolBarHideTimer = null;
 		}
-		PunctuationButtons.positionInlineSymbolBar();
-		bar.style.display = "flex";
+		PunctuationButtons.positionInlineSymbolBar(true);
+	},
+	scheduleInlineSymbolBarShow: () => {
+		if (PunctuationButtons.symbolBarShowTimer) {
+			cancelAnimationFrame(PunctuationButtons.symbolBarShowTimer);
+			PunctuationButtons.symbolBarShowTimer = null;
+		}
+		const textarea = PunctuationButtons.symbolBarTextarea;
+		PunctuationButtons.symbolBarShowTimer = requestAnimationFrame(() => {
+			PunctuationButtons.symbolBarShowTimer = null;
+			if (document.activeElement !== textarea) return;
+			PunctuationButtons.showInlineSymbolBar();
+		});
 	},
 	hideInlineSymbolBar: () => {
 		const bar = document.getElementById("monkey-tools-inline-symbols");
@@ -821,10 +818,8 @@ var PunctuationButtons = {
 	bindInlineSymbolBarActivation: (textarea, bar) => {
 		if (textarea.dataset.monkeyToolsInlineBound === "1") return;
 		textarea.dataset.monkeyToolsInlineBound = "1";
-		textarea.addEventListener("focus", PunctuationButtons.showInlineSymbolBar);
-		textarea.addEventListener("focusin", PunctuationButtons.showInlineSymbolBar);
-		textarea.addEventListener("pointerdown", PunctuationButtons.showInlineSymbolBar);
-		textarea.addEventListener("click", PunctuationButtons.showInlineSymbolBar);
+		textarea.addEventListener("focus", PunctuationButtons.scheduleInlineSymbolBarShow);
+		textarea.addEventListener("focusin", PunctuationButtons.scheduleInlineSymbolBarShow);
 		textarea.addEventListener("blur", PunctuationButtons.scheduleInlineSymbolBarHide);
 		bar.addEventListener("pointerdown", () => {
 			if (PunctuationButtons.symbolBarHideTimer) {
@@ -833,16 +828,19 @@ var PunctuationButtons = {
 			}
 		}, true);
 	},
-	positionInlineSymbolBar: () => {
+	positionInlineSymbolBar: (show = false) => {
 		const bar = document.getElementById("monkey-tools-inline-symbols");
 		const textarea = PunctuationButtons.getSendTextarea();
 		if (!bar || !textarea) return;
 		const rect = textarea.getBoundingClientRect();
 		const width = Math.max(220, Math.min(rect.width, window.innerWidth - 24));
 		const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
+		const display = show || bar.style.display === "flex" ? "flex" : "none";
+		const visibility = show ? "hidden" : bar.style.visibility || "visible";
+		bar.style.cssText = `position:fixed;left:${left}px;top:8px;width:${width}px;z-index:2147482500;display:${display};visibility:${visibility};flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;`;
 		const top = Math.max(8, rect.top - bar.offsetHeight - 8);
-		const display = bar.style.display === "flex" ? "flex" : "none";
-		bar.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${width}px;z-index:2147482500;display:${display};flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;`;
+		bar.style.top = `${top}px`;
+		if (show) bar.style.visibility = "visible";
 	},
 	scheduleInlineSymbolBarRetry: () => {
 		if (PunctuationButtons.symbolBarRetryTimer) return;
@@ -859,6 +857,10 @@ var PunctuationButtons = {
 		if (PunctuationButtons.symbolBarHideTimer) {
 			clearTimeout(PunctuationButtons.symbolBarHideTimer);
 			PunctuationButtons.symbolBarHideTimer = null;
+		}
+		if (PunctuationButtons.symbolBarShowTimer) {
+			cancelAnimationFrame(PunctuationButtons.symbolBarShowTimer);
+			PunctuationButtons.symbolBarShowTimer = null;
 		}
 	},
 	watchInlineSymbolBarHost: () => {
@@ -955,9 +957,24 @@ var PunctuationButtons = {
             .tag-manage-btn.back-mode:hover { transform:scale(1.04); box-shadow:3px 3px 3px #80808075; background:#f0f0f0; }
 
             .cmd-modal-overlay { position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:rgba(255,255,255,0.72); backdrop-filter:none; -webkit-backdrop-filter:none; z-index:9999; border-radius:18px; display:none; }
+            #custom-modal-layer { z-index:10001; }
+            #cmd-manager-layer { position:fixed; inset:0; width:100vw; height:100dvh; border-radius:0; z-index:10000; }
             .cmd-confirm-box { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; border:2px solid #000; border-radius:20px; padding:24px; box-shadow:3px 3px 3px #80808075; text-align:center; width:85%; max-width:320px; box-sizing:border-box; outline:1.5px solid #000; outline-offset:-7px; }
             .cmd-confirm-text { font-size:15px; font-weight:700; color:#000; margin-bottom:20px; line-height:1.6; word-break:break-all; white-space:pre-wrap; }
             .cmd-confirm-actions { display:flex; justify-content:center; gap:12px; }
+            .cmd-manager-box { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; border:2px solid #000; border-radius:20px; padding:18px; box-shadow:3px 3px 3px #80808075; width:92%; max-width:560px; max-height:78vh; overflow:hidden; display:flex; flex-direction:column; gap:12px; outline:1.5px solid #000; outline-offset:-7px; }
+            .cmd-manager-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 2px; }
+            .cmd-manager-title { font-size:18px; font-weight:800; color:#000; }
+            .cmd-manager-list { overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:6px; scrollbar-width:none; }
+            .cmd-manager-group { border:1.5px dashed #000; border-radius:16px; padding:10px; background:#fff; }
+            .cmd-manager-group-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; font-weight:800; }
+            .cmd-manager-check { display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
+            .cmd-manager-check input[type="checkbox"] { width:16px; height:16px; min-width:16px; min-height:16px; flex:0 0 16px; margin:0; accent-color:#000; }
+            .cmd-manager-row { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px dashed #d0d0d0; }
+            .cmd-manager-row-text { flex:1; min-width:0; }
+            .cmd-manager-row-title { font-size:14px; font-weight:800; color:#000; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .cmd-manager-row-body { font-size:12px; color:#333; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-all; }
+            .cmd-manager-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; padding-top:4px; }
 
             .cmd-quick-inserts { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
             .cmd-quick-btn { font-size:12px; font-weight:700; padding:4px 8px; border-radius:999px; background:#fff; border:1.5px dashed #000; color:#000; cursor:pointer; user-select:none; transition:all 0.2s; text-shadow:none; }
@@ -973,6 +990,19 @@ var PunctuationButtons = {
                 <div class="cmd-confirm-actions">
                     <button class="punct-action" id="custom-modal-cancel" style="background:#fff; color:#000;">${UI_TEXT.actions.cancel}</button>
                     <button class="punct-action" id="custom-modal-ok" style="background:#000; color:#fff;">${UI_TEXT.modal.ok}</button>
+                </div>
+            </div>
+        </div>
+        <div class="cmd-modal-overlay" id="cmd-manager-layer">
+            <div class="cmd-manager-box">
+                <div class="cmd-manager-head">
+                    <div class="cmd-manager-title">指令管理</div>
+                    <button class="tag-manage-btn back-mode" id="cmd-manager-close" title="关闭">×</button>
+                </div>
+                <div class="cmd-manager-list" id="cmd-manager-list"></div>
+                <div class="cmd-manager-actions">
+                    <button class="punct-action" id="cmd-manager-delete" style="color:#000;">删除选中</button>
+                    <button class="punct-action" id="cmd-manager-export" style="background:#000; color:#fff;">导出选中</button>
                 </div>
             </div>
         </div>
@@ -1013,8 +1043,7 @@ var PunctuationButtons = {
                     <button class="punct-tab monkey-main-tab ${state.activeMainView === "symbols" ? "active" : ""}" data-main-view="symbols">${UI_TEXT.mainTabs.symbols}</button>
                 </div>
                 <div data-main-panel="commands">
-                <div class="punct-head">
-                    <div class="punct-title">${UI_TEXT.titles.commandRepository}</div>
+                <div class="punct-head" style="justify-content:flex-end;">
                     <div style="display:flex; gap:8px;">
                         <button class="punct-action" id="cmd-import-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="${UI_TEXT.tooltips.import}">${UI_TEXT.actions.import}</button>
                         <button class="punct-action" id="cmd-export-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="${UI_TEXT.tooltips.export}">${UI_TEXT.actions.export}</button>
@@ -1030,6 +1059,7 @@ var PunctuationButtons = {
                     <input type="text" class="cmd-search" id="cmd-search-input" placeholder="${UI_TEXT.fields.search}">
                     <button class="punct-action" id="cmd-toggle-cat-btn" style="height:38px; padding:0 12px;" title="${UI_TEXT.tooltips.format}">${UI_TEXT.actions.format}</button>
                     <button class="punct-action" id="cmd-toggle-editor-btn" style="height:38px;">${UI_TEXT.actions.newCommand}</button>
+                    <button class="punct-action" id="cmd-manager-btn" style="height:38px;">指令管理</button>
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; min-height: 28px;">
@@ -1078,10 +1108,9 @@ var PunctuationButtons = {
                 <div class="cmd-list-wrap" id="cmd-list-container"></div>
                 </div>
                 <div data-main-panel="symbols" style="display:none;">
-                    <div class="punct-head">
-                        <div class="punct-title">${UI_TEXT.titles.symbolSettings}</div>
+                    <div class="punct-head" style="justify-content:flex-end;">
                         <label class="punct-action" style="gap:8px; cursor:pointer;">
-                            <input type="checkbox" id="symbol-inline-toggle" style="width:auto;" ${PunctuationButtons.getInlineSymbolsEnabled() ? "checked" : ""}>
+                            <input type="checkbox" id="symbol-inline-toggle" style="width:16px; height:16px; min-width:16px; min-height:16px; flex:0 0 16px; margin:0; accent-color:#000;" ${PunctuationButtons.getInlineSymbolsEnabled() ? "checked" : ""}>
                             <span>${UI_TEXT.symbols.inlineToggle}</span>
                         </label>
                     </div>
@@ -1095,10 +1124,12 @@ var PunctuationButtons = {
             </div>
         `);
 		let modalCallback = null;
+		let modalCancelCallback = null;
 		let isPromptMode = false;
 		const showModal = (options) => {
 			$wrap.find("#custom-modal-msg").text(options.msg);
 			modalCallback = options.onOk;
+			modalCancelCallback = options.onCancel || null;
 			isPromptMode = !!options.prompt;
 			const $input = $wrap.find("#custom-modal-input");
 			if (isPromptMode) {
@@ -1107,22 +1138,147 @@ var PunctuationButtons = {
 			} else {
 				$input.hide();
 				if (options.isAlert) $wrap.find("#custom-modal-ok").css("background", "#222").text(UI_TEXT.modal.gotIt);
-				else $wrap.find("#custom-modal-ok").css("background", "#000").text(UI_TEXT.modal.confirmAction);
+				else $wrap.find("#custom-modal-ok").css("background", "#000").text(options.okText || UI_TEXT.modal.confirmAction);
 			}
+			$wrap.find("#custom-modal-cancel").text(options.cancelText || UI_TEXT.actions.cancel);
 			if (options.isAlert) $wrap.find("#custom-modal-cancel").hide();
 			else $wrap.find("#custom-modal-cancel").show();
 			$wrap.find("#custom-modal-layer").fadeIn(150);
 			if (isPromptMode) setTimeout(() => $input.focus(), 160);
 		};
 		$wrap.find("#custom-modal-cancel").on("click", () => {
+			if (modalCancelCallback) modalCancelCallback();
 			modalCallback = null;
+			modalCancelCallback = null;
 			$wrap.find("#custom-modal-layer").fadeOut(150);
 		});
 		$wrap.find("#custom-modal-ok").on("click", () => {
 			const val = isPromptMode ? $wrap.find("#custom-modal-input").val() : true;
 			if (modalCallback) modalCallback(val);
+			modalCallback = null;
+			modalCancelCallback = null;
 			$wrap.find("#custom-modal-layer").fadeOut(150);
 		});
+		const downloadJson = (data, filenamePrefix) => {
+			const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `${filenamePrefix}_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		};
+		const buildCommandExportData = (commands, includeFormat, includeSymbols = false) => {
+			const exportedCommands = commands.map((command) => ({ ...command }));
+			const payload = {
+				version: 1,
+				commands: exportedCommands,
+				tags: Array.from(new Set(exportedCommands.flatMap((command) => command.tags || [])))
+			};
+			if (includeFormat) {
+				const currentCategories = PunctuationButtons.loadCategorySettings();
+				payload.categories = includeSymbols ? { ...currentCategories } : {};
+				if (!includeSymbols) exportedCommands.forEach((command) => {
+					const categoryName = command.category || Object.keys(DEFAULT_CMD_CATEGORIES)[0];
+					if (!payload.categories[categoryName]) payload.categories[categoryName] = currentCategories[categoryName] || {
+						prefix: "",
+						suffix: ""
+					};
+				});
+			}
+			if (includeSymbols) {
+				payload.tags = Array.from(new Set([...PunctuationButtons.loadGlobalTags(), ...payload.tags]));
+				payload.symbols = PunctuationButtons.loadCustomSymbols();
+			}
+			return payload;
+		};
+		const askExportFormat = (onChoice) => {
+			showModal({
+				msg: "是否连同格式导出？",
+				okText: "带格式",
+				cancelText: "不带格式",
+				onOk: () => onChoice(true),
+				onCancel: () => onChoice(false)
+			});
+		};
+		const exportCommands = (commands, includeFormat, includeSymbols = false, filenamePrefix = "sillytavern_commands_backup") => {
+			downloadJson(buildCommandExportData(commands, includeFormat, includeSymbols), filenamePrefix);
+			if (window.toastr) toastr.success(UI_TEXT.messages.exportSuccess);
+		};
+		const normalizeCategoryName = (categoryName) => {
+			const categories = Object.keys(DEFAULT_CMD_CATEGORIES);
+			return categories.includes(categoryName) ? categoryName : categories[0];
+		};
+		const collectCommandsByCategory = () => {
+			const grouped = {};
+			Object.keys(DEFAULT_CMD_CATEGORIES).forEach((category) => {
+				grouped[category] = [];
+			});
+			PunctuationButtons.loadCommands().forEach((command) => {
+				const categoryName = normalizeCategoryName(command.category);
+				if (!grouped[categoryName]) grouped[categoryName] = [];
+				grouped[categoryName].push(command);
+			});
+			return grouped;
+		};
+		const managerSelection = /* @__PURE__ */ new Set();
+		const setManagerLayerVisible = (visible) => {
+			const $layer = $wrap.find("#cmd-manager-layer");
+			if (visible) $layer.fadeIn(120);
+			else $layer.fadeOut(120);
+		};
+		const renderCommandManager = () => {
+			const grouped = collectCommandsByCategory();
+			const blocks = Object.keys(DEFAULT_CMD_CATEGORIES).map((category) => {
+				const items = grouped[category] || [];
+				const itemRows = items.map((command) => {
+					const checked = managerSelection.has(command.id);
+					return `
+                        <div class="cmd-manager-row">
+                            <label class="cmd-manager-check">
+                                <input type="checkbox" data-manager-command="${command.id}" ${checked ? "checked" : ""}>
+                            </label>
+                            <div class="cmd-manager-row-text">
+                                <div class="cmd-manager-row-title">${PunctuationButtons.escapeHtml(command.title || command.text.substring(0, 10))}</div>
+                                <div class="cmd-manager-row-body">${PunctuationButtons.escapeHtml(command.text)}</div>
+                                ${command.tags && command.tags.length ? `<div class="cmd-tags-display">${command.tags.map((tag) => `<span class="cmd-tag-mini">${PunctuationButtons.escapeHtml(tag)}</span>`).join("")}</div>` : ""}
+                            </div>
+                        </div>
+                    `;
+				}).join("");
+				const allChecked = items.length > 0 && items.every((command) => managerSelection.has(command.id));
+				return `
+                    <div class="cmd-manager-group">
+                        <div class="cmd-manager-group-head">
+                            <label class="cmd-manager-check">
+                                <input type="checkbox" data-manager-category-check="${PunctuationButtons.escapeHtml(category)}" ${allChecked ? "checked" : ""}>
+                                <span>${PunctuationButtons.escapeHtml(category)}</span>
+                            </label>
+                            <span style="font-size:12px; color:#666;">${items.length} 条</span>
+                        </div>
+                        ${itemRows || `<div style="font-size:12px; color:#999; padding:6px 0;">暂无指令</div>`}
+                    </div>
+                `;
+			}).join("");
+			$wrap.find("#cmd-manager-list").html(blocks || `<div style="text-align:center; padding:24px; color:#999;">暂无指令</div>`);
+			$wrap.find("[data-manager-category-check]").each(function() {
+				const items = grouped[String(window.jQuery(this).attr("data-manager-category-check"))] || [];
+				const allChecked = items.length > 0 && items.every((command) => managerSelection.has(command.id));
+				const someChecked = items.some((command) => managerSelection.has(command.id));
+				this.indeterminate = !allChecked && someChecked;
+			});
+		};
+		const openCommandManager = () => {
+			managerSelection.clear();
+			renderCommandManager();
+			setManagerLayerVisible(true);
+		};
+		const closeCommandManager = () => {
+			managerSelection.clear();
+			setManagerLayerVisible(false);
+		};
 		const renderSymbolAdd = () => {
 			$wrap.find("#symbol-content").html(`
                 <div class="punct-field"><label>类型</label><select data-add-type><option value="single">单独标点</option><option value="pair">成对标点</option></select></div>
@@ -1299,23 +1455,9 @@ var PunctuationButtons = {
 			else $wrap.find("#symbol-tabs-container .punct-tab.active").data("symbol-view") === "edit" ? renderSymbolEdit() : renderSymbolAdd();
 		};
 		$wrap.find("#cmd-export-btn").on("click", () => {
-			const data = {
-				version: 1,
-				commands: PunctuationButtons.loadCommands(),
-				categories: PunctuationButtons.loadCategorySettings(),
-				tags: PunctuationButtons.loadGlobalTags(),
-				symbols: PunctuationButtons.loadCustomSymbols()
-			};
-			const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
-			a.href = url;
-			a.download = `sillytavern_commands_backup_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
-			if (window.toastr) toastr.success(UI_TEXT.messages.exportSuccess);
+			askExportFormat((includeFormat) => {
+				exportCommands(PunctuationButtons.loadCommands(), includeFormat, true, "sillytavern_commands_backup");
+			});
 		});
 		$wrap.find("#cmd-import-btn").on("click", () => {
 			$wrap.find("#cmd-import-file").click();
@@ -1335,9 +1477,16 @@ var PunctuationButtons = {
 							let existingCmds = PunctuationButtons.loadCommands();
 							let addedCmdsCount = 0;
 							importedCmds.forEach((ic) => {
-								if (!existingCmds.find((ec) => ec.title === ic.title && ec.text === ic.text)) {
-									ic.id = PunctuationButtons.generateId();
-									existingCmds.push(ic);
+								const imported = {
+									...ic,
+									id: PunctuationButtons.generateId(),
+									category: normalizeCategoryName(ic.category),
+									tags: Array.isArray(ic.tags) ? ic.tags : [],
+									timestamp: Number(ic.timestamp || Date.now()),
+									isFavorite: typeof ic.isFavorite === "boolean" ? ic.isFavorite : !!ic.favorite
+								};
+								if (!existingCmds.find((ec) => ec.category === imported.category && ec.title === imported.title && ec.text === imported.text)) {
+									existingCmds.push(imported);
 									addedCmdsCount++;
 								}
 							});
@@ -1347,13 +1496,15 @@ var PunctuationButtons = {
 								Object.keys(data.categories).forEach((k) => existingCats[k] = data.categories[k]);
 								PunctuationButtons.saveCategorySettings(existingCats);
 							}
-							if (Array.isArray(data.tags)) {
-								let existingTags = PunctuationButtons.loadGlobalTags();
-								data.tags.forEach((t) => {
-									if (!existingTags.includes(t)) existingTags.push(t);
-								});
-								PunctuationButtons.saveGlobalTags(existingTags);
-							}
+							let existingTags = PunctuationButtons.loadGlobalTags();
+							const importedTags = Array.isArray(data.tags) ? data.tags : [];
+							importedCmds.forEach((cmd) => {
+								if (Array.isArray(cmd.tags)) importedTags.push(...cmd.tags);
+							});
+							importedTags.forEach((t) => {
+								if (t && !existingTags.includes(t)) existingTags.push(t);
+							});
+							PunctuationButtons.saveGlobalTags(existingTags);
 							if (Array.isArray(data.symbols)) {
 								let existingSymbols = PunctuationButtons.loadCustomSymbols();
 								data.symbols.forEach((is) => {
@@ -1375,6 +1526,55 @@ var PunctuationButtons = {
 				$wrap.find("#cmd-import-file").val("");
 			};
 			reader.readAsText(file);
+		});
+		$wrap.find("#cmd-manager-btn").on("click", openCommandManager);
+		$wrap.find("#cmd-manager-close").on("click", closeCommandManager);
+		$wrap.find("#cmd-manager-layer").on("click", function(event) {
+			if (event.target === this) closeCommandManager();
+		});
+		$wrap.on("change", "[data-manager-category-check]", function() {
+			const category = String($(this).attr("data-manager-category-check"));
+			const grouped = collectCommandsByCategory();
+			const shouldSelect = $(this).is(":checked");
+			(grouped[category] || []).forEach((command) => {
+				if (shouldSelect) managerSelection.add(command.id);
+				else managerSelection.delete(command.id);
+			});
+			renderCommandManager();
+		});
+		$wrap.on("change", "[data-manager-command]", function() {
+			const id = String($(this).attr("data-manager-command"));
+			if ($(this).is(":checked")) managerSelection.add(id);
+			else managerSelection.delete(id);
+			renderCommandManager();
+		});
+		$wrap.find("#cmd-manager-delete").on("click", () => {
+			if (!managerSelection.size) return showModal({
+				msg: UI_TEXT.messages.selectFirst,
+				isAlert: true
+			});
+			showModal({
+				msg: `确定删除选中的 ${managerSelection.size} 条指令吗？`,
+				onOk: () => {
+					const selectedIds = new Set(managerSelection);
+					const remaining = PunctuationButtons.loadCommands().filter((command) => !selectedIds.has(command.id));
+					PunctuationButtons.saveCommands(remaining);
+					managerSelection.clear();
+					renderCommandManager();
+					renderUI();
+				}
+			});
+		});
+		$wrap.find("#cmd-manager-export").on("click", () => {
+			if (!managerSelection.size) return showModal({
+				msg: UI_TEXT.messages.selectFirst,
+				isAlert: true
+			});
+			const selectedIds = new Set(managerSelection);
+			const selectedCommands = PunctuationButtons.loadCommands().filter((command) => selectedIds.has(command.id));
+			askExportFormat((includeFormat) => {
+				exportCommands(selectedCommands, includeFormat, false, "sillytavern_commands_selected");
+			});
 		});
 		let activeInput = null;
 		$wrap.on("focus", "#cmd-input-title, #cmd-input-text, #cmd-cat-prefix, #cmd-cat-suffix", function() {
