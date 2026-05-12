@@ -30,6 +30,7 @@ const PunctuationButtons = {
     symbolBarObserver: null,
     symbolBarRetryTimer: null,
     symbolBarTextarea: null,
+    symbolBarHideTimer: null,
 
     defaultSymbols: [
         { name: '**', left: '*', right: '*' },
@@ -155,6 +156,14 @@ const PunctuationButtons = {
     getVisibleSymbols: () => {
         const deleted = new Set(PunctuationButtons.loadDeletedNames());
         return PunctuationButtons.getAllSymbols().filter((item) => !deleted.has(item.name));
+    },
+    getInlineSymbolsEnabled: () => {
+        const value = PunctuationButtons.getSettingsRoot().showInlineSymbols;
+        return typeof value === 'boolean' ? value : true;
+    },
+    saveInlineSymbolsEnabled: (enabled) => {
+        PunctuationButtons.getSettingsRoot().showInlineSymbols = !!enabled;
+        PunctuationButtons.saveExtensionSettings();
     },
 
     generateId: () => 'cmd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -585,6 +594,9 @@ const PunctuationButtons = {
     buildInlineSymbolBar: () => {
         PunctuationButtons.stopInlineSymbolBarTracking();
         document.getElementById('monkey-tools-inline-symbols')?.remove();
+        if (!PunctuationButtons.getInlineSymbolsEnabled()) {
+            return;
+        }
         const textarea = PunctuationButtons.getSendTextarea();
         if (!textarea) {
             PunctuationButtons.scheduleInlineSymbolBarRetry();
@@ -630,7 +642,54 @@ const PunctuationButtons = {
 
         document.body.appendChild(bar);
         PunctuationButtons.positionInlineSymbolBar();
+        PunctuationButtons.hideInlineSymbolBar();
+        PunctuationButtons.bindInlineSymbolBarActivation(textarea, bar);
+        if (document.activeElement === textarea || bar.contains(document.activeElement)) {
+            PunctuationButtons.showInlineSymbolBar();
+        }
         PunctuationButtons.watchInlineSymbolBarHost();
+    },
+    showInlineSymbolBar: () => {
+        if (!PunctuationButtons.getInlineSymbolsEnabled()) return;
+        const bar = document.getElementById('monkey-tools-inline-symbols');
+        if (!bar) return;
+        if (PunctuationButtons.symbolBarHideTimer) {
+            clearTimeout(PunctuationButtons.symbolBarHideTimer);
+            PunctuationButtons.symbolBarHideTimer = null;
+        }
+        PunctuationButtons.positionInlineSymbolBar();
+        bar.style.display = 'flex';
+    },
+    hideInlineSymbolBar: () => {
+        const bar = document.getElementById('monkey-tools-inline-symbols');
+        if (!bar) return;
+        bar.style.display = 'none';
+    },
+    scheduleInlineSymbolBarHide: () => {
+        if (PunctuationButtons.symbolBarHideTimer) clearTimeout(PunctuationButtons.symbolBarHideTimer);
+        PunctuationButtons.symbolBarHideTimer = window.setTimeout(() => {
+            PunctuationButtons.symbolBarHideTimer = null;
+            const bar = document.getElementById('monkey-tools-inline-symbols');
+            const textarea = PunctuationButtons.symbolBarTextarea;
+            const active = document.activeElement;
+            if (bar?.contains(active) || active === textarea) return;
+            PunctuationButtons.hideInlineSymbolBar();
+        }, 120);
+    },
+    bindInlineSymbolBarActivation: (textarea, bar) => {
+        if (textarea.dataset.monkeyToolsInlineBound === '1') return;
+        textarea.dataset.monkeyToolsInlineBound = '1';
+        textarea.addEventListener('focus', PunctuationButtons.showInlineSymbolBar);
+        textarea.addEventListener('focusin', PunctuationButtons.showInlineSymbolBar);
+        textarea.addEventListener('pointerdown', PunctuationButtons.showInlineSymbolBar);
+        textarea.addEventListener('click', PunctuationButtons.showInlineSymbolBar);
+        textarea.addEventListener('blur', PunctuationButtons.scheduleInlineSymbolBarHide);
+        bar.addEventListener('pointerdown', () => {
+            if (PunctuationButtons.symbolBarHideTimer) {
+                clearTimeout(PunctuationButtons.symbolBarHideTimer);
+                PunctuationButtons.symbolBarHideTimer = null;
+            }
+        }, true);
     },
     positionInlineSymbolBar: () => {
         const bar = document.getElementById('monkey-tools-inline-symbols');
@@ -641,7 +700,8 @@ const PunctuationButtons = {
         const width = Math.max(220, Math.min(rect.width, window.innerWidth - 24));
         const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
         const top = Math.max(8, rect.top - bar.offsetHeight - 8);
-        bar.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${width}px;z-index:2147482500;display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;`;
+        const display = bar.style.display === 'flex' ? 'flex' : 'none';
+        bar.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${width}px;z-index:2147482500;display:${display};flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;`;
     },
     scheduleInlineSymbolBarRetry: () => {
         if (PunctuationButtons.symbolBarRetryTimer) return;
@@ -654,6 +714,10 @@ const PunctuationButtons = {
         if (PunctuationButtons.symbolBarRetryTimer) {
             clearTimeout(PunctuationButtons.symbolBarRetryTimer);
             PunctuationButtons.symbolBarRetryTimer = null;
+        }
+        if (PunctuationButtons.symbolBarHideTimer) {
+            clearTimeout(PunctuationButtons.symbolBarHideTimer);
+            PunctuationButtons.symbolBarHideTimer = null;
         }
     },
     watchInlineSymbolBarHost: () => {
@@ -776,7 +840,7 @@ const PunctuationButtons = {
         </div>
     `,
 
-    openCommandPanel: () => {
+    openCommandPanel: (initialView = 'commands') => {
         if (!window.jQuery) {
             window.toastr?.error('当前环境缺少 jQuery，无法打开指令面板。');
             return;
@@ -784,6 +848,7 @@ const PunctuationButtons = {
         const $ = window.jQuery;
 
         let state = {
+            activeMainView: initialView === 'symbols' ? 'symbols' : 'commands',
             activeTab: Object.keys(DEFAULT_CMD_CATEGORIES)[0],
             searchText: '',
             filterTags: [], 
@@ -805,6 +870,11 @@ const PunctuationButtons = {
         const $wrap = $(`
             <div class="punct-settings">
                 ${PunctuationButtons.baseCss()}
+                <div class="punct-tabs monkey-main-tabs">
+                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'commands' ? 'active' : ''}" data-main-view="commands">\u6307\u4EE4\u4ED3\u5E93</button>
+                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'symbols' ? 'active' : ''}" data-main-view="symbols">\u7B26\u53F7</button>
+                </div>
+                <div data-main-panel="commands">
                 <div class="punct-head">
                     <div class="punct-title">\u5E38\u7528\u6307\u4EE4\u5E93</div>
                     <div style="display:flex; gap:8px;">
@@ -868,6 +938,21 @@ const PunctuationButtons = {
                 </div>
 
                 <div class="cmd-list-wrap" id="cmd-list-container"></div>
+                </div>
+                <div data-main-panel="symbols" style="display:none;">
+                    <div class="punct-head">
+                        <div class="punct-title">\u7B26\u53F7\u6309\u94AE\u8BBE\u7F6E</div>
+                        <label class="punct-action" style="gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="symbol-inline-toggle" style="width:auto;" ${PunctuationButtons.getInlineSymbolsEnabled() ? 'checked' : ''}>
+                            <span>\u663E\u793A\u7B26\u53F7</span>
+                        </label>
+                    </div>
+                    <div class="punct-tabs" id="symbol-tabs-container">
+                        <button class="punct-tab active" data-symbol-view="add">\u65B0\u589E</button>
+                        <button class="punct-tab" data-symbol-view="edit">\u7F16\u8F91</button>
+                    </div>
+                    <div class="punct-panel" id="symbol-content"></div>
+                </div>
                 ${PunctuationButtons.modalHtml}
             </div>
         `);
@@ -910,6 +995,150 @@ const PunctuationButtons = {
             if (modalCallback) modalCallback(val);
             $wrap.find('#custom-modal-layer').fadeOut(150);
         });
+
+        const renderSymbolAdd = () => {
+            $wrap.find('#symbol-content').html(`
+                <div class="punct-field"><label>\u7C7B\u578B</label><select data-add-type><option value="single">\u5355\u72EC\u6807\u70B9</option><option value="pair">\u6210\u5BF9\u6807\u70B9</option></select></div>
+                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-add-name placeholder="\u663E\u793A\u5728\u6309\u94AE\u4E0A"></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="punct-field"><label data-left-label>\u8981\u63D2\u5165\u7684\u7B26\u53F7</label><input data-add-left></div>
+                    <div class="punct-field" data-right-wrap style="display:none;"><label>\u53F3\u4FA7\u7B26\u53F7</label><input data-add-right></div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-save-add style="background:#000; color:#fff;">\u4FDD\u5B58</button></div>
+            `);
+            $wrap.find('[data-add-type]').on('change', function () {
+                const isPair = window.jQuery(this).val() === 'pair';
+                $wrap.find('[data-right-wrap]').toggle(isPair);
+                $wrap.find('[data-left-label]').text(isPair ? '\u5DE6\u4FA7\u7B26\u53F7' : '\u8981\u63D2\u5165\u7684\u7B26\u53F7');
+            });
+            $wrap.find('[data-save-add]').on('click', () => {
+                const type = $wrap.find('[data-add-type]').val(), name = String($wrap.find('[data-add-name]').val() || '').trim();
+                const left = String($wrap.find('[data-add-left]').val() || ''), right = type === 'pair' ? String($wrap.find('[data-add-right]').val() || '') : '';
+                if (!name || !left || (type === 'pair' && !right)) return showModal({msg: '\u8BF7\u586B\u5B8C\u5FC5\u586B\u9879\u3002', isAlert:true});
+                const custom = PunctuationButtons.loadCustomSymbols(); custom.push({ name, left, right });
+                PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.forgetDeletedName(name);
+                PunctuationButtons.register(); renderSymbolEdit();
+            });
+        };
+        const renderSymbolEditForm = (item, oldName) => {
+            $wrap.find('#symbol-content').html(`
+                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-edit-name value="${PunctuationButtons.escapeHtml(item.name)}"></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="punct-field"><label>\u5DE6\u4FA7\u7B26\u53F7</label><input data-edit-left value="${PunctuationButtons.escapeHtml(item.left)}"></div>
+                    <div class="punct-field"><label>\u53F3\u4FA7\u7B26\u53F7 (\u53EF\u7559\u7A7A)</label><input data-edit-right value="${PunctuationButtons.escapeHtml(item.right || '')}"></div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">\u8FD4\u56DE</button>
+                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">\u4FDD\u5B58</button>
+                </div>
+            `);
+            $wrap.find('[data-back-edit]').on('click', renderSymbolEdit);
+            $wrap.find('[data-save-edit]').on('click', () => {
+                const name = String($wrap.find('[data-edit-name]').val() || '').trim(), left = String($wrap.find('[data-edit-left]').val() || ''), right = String($wrap.find('[data-edit-right]').val() || '');
+                if (!name || !left) return showModal({msg:'\u5FC5\u586B\u9879\u4E0D\u80FD\u4E3A\u7A7A', isAlert:true});
+                if (name !== oldName) { PunctuationButtons.rememberDeletedName(oldName); PunctuationButtons.hideButtonByName(oldName); PunctuationButtons.forgetDeletedName(name); }
+                const custom = PunctuationButtons.loadCustomSymbols(), idx = custom.findIndex(i => i.name === oldName);
+                if(idx !== -1) { custom[idx] = { name, left, right }; PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.register(); renderSymbolEdit(); }
+            });
+        };
+        const renderSymbolEdit = () => {
+            const all = PunctuationButtons.getVisibleSymbols(), defaultNames = new Set(PunctuationButtons.defaultSymbols.map(item => item.name));
+            const rows = all.length ? all.map((item) => {
+                const isDefault = defaultNames.has(item.name);
+                return `<div class="cmd-row symbol-edit-row" data-name="${PunctuationButtons.escapeHtml(item.name)}" draggable="true" style="align-items:center; padding:10px 14px;">
+                    <span class="drag-handle" title="\u62D6\u52A8\u6392\u5E8F">=</span>
+                    <input type="checkbox" data-pick>
+                    <div class="cmd-content"><div class="cmd-text" style="font-weight:600; font-size:14px; color:#111;">${PunctuationButtons.escapeHtml(item.name)}</div></div>
+                    <button class="punct-action" data-edit-one ${isDefault ? 'style="opacity:.45;" title="\u9ED8\u8BA4\u6309\u94AE\u53EA\u80FD\u5220"' : ''}>\u4FEE\u6539</button>
+                </div>`;
+            }).join('') : `<div style="text-align:center; padding:20px; color:#999;">\u6682\u65E0\u53EF\u7F16\u8F91\u6309\u94AE</div>`;
+            $wrap.find('#symbol-content').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>\u5220\u9664\u9009\u4E2D</button></div>`);
+            const $list = $wrap.find('.cmd-list-wrap');
+            let draggedRow = null;
+            let pointerDragId = null;
+            const saveCurrentOrder = () => {
+                const orderedNames = $list.find('.cmd-row').map(function () { return window.jQuery(this).attr('data-name'); }).get();
+                PunctuationButtons.saveSymbolOrder(orderedNames);
+                PunctuationButtons.register();
+            };
+            $list.on('dragstart', '.cmd-row', function (event) {
+                draggedRow = this;
+                window.jQuery(this).addClass('dragging');
+                event.originalEvent.dataTransfer.effectAllowed = 'move';
+                event.originalEvent.dataTransfer.setData('text/plain', window.jQuery(this).attr('data-name'));
+            });
+            $list.on('dragover', '.cmd-row', function (event) {
+                event.preventDefault();
+                const $target = window.jQuery(this);
+                if (!draggedRow || this === draggedRow) return;
+                const targetRect = this.getBoundingClientRect();
+                const insertAfter = event.originalEvent.clientY > targetRect.top + targetRect.height / 2;
+                if (insertAfter) $target.after(draggedRow);
+                else $target.before(draggedRow);
+            });
+            $list.on('dragend', '.cmd-row', function () {
+                window.jQuery(this).removeClass('dragging');
+                if (draggedRow) saveCurrentOrder();
+                draggedRow = null;
+            });
+            $list.on('pointerdown', '.drag-handle', function (event) {
+                const row = window.jQuery(this).closest('.cmd-row')[0];
+                if (!row) return;
+                draggedRow = row;
+                pointerDragId = event.originalEvent.pointerId;
+                try { this.setPointerCapture?.(pointerDragId); } catch (_) {}
+                window.jQuery(row).addClass('dragging reorder-active');
+                window.jQuery(document).one('pointerup pointercancel', () => {
+                    if (!draggedRow) return;
+                    window.jQuery(draggedRow).removeClass('dragging reorder-active');
+                    saveCurrentOrder();
+                    draggedRow = null;
+                    pointerDragId = null;
+                });
+                event.preventDefault();
+            });
+            $list.on('pointermove', function (event) {
+                if (!draggedRow) return;
+                if (pointerDragId !== null && event.originalEvent.pointerId !== pointerDragId) return;
+                const pointerEvent = event.originalEvent;
+                const elementAtPoint = document.elementFromPoint(pointerEvent.clientX, pointerEvent.clientY);
+                const row = elementAtPoint?.closest?.('.cmd-row');
+                if (!row || row === draggedRow || !window.jQuery.contains($list[0], row)) return;
+                const targetRect = row.getBoundingClientRect();
+                const insertAfter = pointerEvent.clientY > targetRect.top + targetRect.height / 2;
+                if (insertAfter) window.jQuery(row).after(draggedRow);
+                else window.jQuery(row).before(draggedRow);
+                event.preventDefault();
+            });
+             
+            $wrap.find('[data-edit-one]').on('click', function () {
+                const name = window.jQuery(this).closest('.cmd-row').attr('data-name');
+                if (defaultNames.has(name)) return showModal({msg: '\u9ED8\u8BA4\u81EA\u5E26\u6807\u70B9\u4EC5\u652F\u6301\u5220\u9664', isAlert:true});
+                const item = PunctuationButtons.loadCustomSymbols().find(i => i.name === name);
+                if(item) renderSymbolEditForm(item, name);
+            });
+            
+            $wrap.find('[data-delete-picked]').on('click', () => {
+                const picked = $wrap.find('[data-pick]:checked').map(function () { return window.jQuery(this).closest('.cmd-row').attr('data-name'); }).get();
+                if (!picked.length) return showModal({msg:'\u8BF7\u5148\u52FE\u9009', isAlert:true});
+                showModal({
+                    msg: `\u786E\u5B9A\u8981\u5220\u9664\u9009\u4E2D\u7684 ${picked.length} \u4E2A\u6807\u70B9\u6309\u94AE\u5417\uFF1F`,
+                    onOk: () => { PunctuationButtons.deleteCustomByNames(picked); renderSymbolEdit(); }
+                });
+            });
+        };
+        const renderMainView = () => {
+            $wrap.find('[data-main-panel="commands"]').toggle(state.activeMainView === 'commands');
+            $wrap.find('[data-main-panel="symbols"]').toggle(state.activeMainView === 'symbols');
+            $wrap.find('.monkey-main-tab').removeClass('active');
+            $wrap.find(`.monkey-main-tab[data-main-view="${state.activeMainView}"]`).addClass('active');
+            if (state.activeMainView === 'commands') {
+                renderUI();
+            } else {
+                const symbolView = $wrap.find('#symbol-tabs-container .punct-tab.active').data('symbol-view');
+                symbolView === 'edit' ? renderSymbolEdit() : renderSymbolAdd();
+            }
+        };
 
         $wrap.find('#cmd-export-btn').on('click', () => {
             const data = {
@@ -1151,8 +1380,25 @@ const PunctuationButtons = {
             renderUI();
         };
 
-        $wrap.on('click', '.punct-tab', function() {
-            $wrap.find('.punct-tab').removeClass('active');
+        $wrap.on('click', '.monkey-main-tab', function() {
+            state.activeMainView = String($(this).data('main-view'));
+            renderMainView();
+        });
+
+        $wrap.on('change', '#symbol-inline-toggle', function() {
+            PunctuationButtons.saveInlineSymbolsEnabled($(this).is(':checked'));
+            if ($(this).is(':checked')) PunctuationButtons.buildInlineSymbolBar();
+            else document.getElementById('monkey-tools-inline-symbols')?.remove();
+        });
+
+        $wrap.on('click', '#symbol-tabs-container .punct-tab', function() {
+            $wrap.find('#symbol-tabs-container .punct-tab').removeClass('active');
+            $(this).addClass('active');
+            $(this).data('symbol-view') === 'add' ? renderSymbolAdd() : renderSymbolEdit();
+        });
+
+        $wrap.on('click', '#cmd-tabs-container .punct-tab', function() {
+            $wrap.find('#cmd-tabs-container .punct-tab').removeClass('active');
             $(this).addClass('active');
             state.activeTab = $(this).data('cat');
             state.filterTags = []; 
@@ -1413,11 +1659,13 @@ const PunctuationButtons = {
             });
         });
 
-        renderUI();
+        renderMainView();
         PunctuationButtons.openPopup($wrap, { okButton: '\u5173\u95ED', forceCustom: true });
     },
 
     openSettings: () => {
+        PunctuationButtons.openCommandPanel('symbols');
+        return;
         if (!window.jQuery) {
             window.toastr?.error('当前环境缺少 jQuery，无法打开符号设置。');
             return;

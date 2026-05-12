@@ -23,6 +23,7 @@ var e = {
 	symbolBarObserver: null,
 	symbolBarRetryTimer: null,
 	symbolBarTextarea: null,
+	symbolBarHideTimer: null,
 	defaultSymbols: [
 		{
 			name: "**",
@@ -159,6 +160,13 @@ var e = {
 	getVisibleSymbols: () => {
 		let e = new Set(l.loadDeletedNames());
 		return l.getAllSymbols().filter((t) => !e.has(t.name));
+	},
+	getInlineSymbolsEnabled: () => {
+		let e = l.getSettingsRoot().showInlineSymbols;
+		return typeof e == "boolean" ? e : !0;
+	},
+	saveInlineSymbolsEnabled: (e) => {
+		l.getSettingsRoot().showInlineSymbols = !!e, l.saveExtensionSettings();
 	},
 	generateId: () => "cmd_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
 	loadCommands: () => {
@@ -472,7 +480,7 @@ var e = {
 		n.addEventListener("pointerdown", i), e.append(n), document.body.appendChild(e);
 	},
 	buildInlineSymbolBar: () => {
-		l.stopInlineSymbolBarTracking(), document.getElementById("monkey-tools-inline-symbols")?.remove();
+		if (l.stopInlineSymbolBarTracking(), document.getElementById("monkey-tools-inline-symbols")?.remove(), !l.getInlineSymbolsEnabled()) return;
 		let e = l.getSendTextarea();
 		if (!e) {
 			l.scheduleInlineSymbolBarRetry();
@@ -492,13 +500,34 @@ var e = {
 			}
 			let t = e.target.closest("button[data-symbol-name]");
 			t && (e.preventDefault(), e.stopPropagation(), l.insertByName(t.dataset.symbolName));
-		}, !0), document.body.appendChild(t), l.positionInlineSymbolBar(), l.watchInlineSymbolBarHost();
+		}, !0), document.body.appendChild(t), l.positionInlineSymbolBar(), l.hideInlineSymbolBar(), l.bindInlineSymbolBarActivation(e, t), (document.activeElement === e || t.contains(document.activeElement)) && l.showInlineSymbolBar(), l.watchInlineSymbolBarHost();
+	},
+	showInlineSymbolBar: () => {
+		if (!l.getInlineSymbolsEnabled()) return;
+		let e = document.getElementById("monkey-tools-inline-symbols");
+		e && (l.symbolBarHideTimer &&= (clearTimeout(l.symbolBarHideTimer), null), l.positionInlineSymbolBar(), e.style.display = "flex");
+	},
+	hideInlineSymbolBar: () => {
+		let e = document.getElementById("monkey-tools-inline-symbols");
+		e && (e.style.display = "none");
+	},
+	scheduleInlineSymbolBarHide: () => {
+		l.symbolBarHideTimer && clearTimeout(l.symbolBarHideTimer), l.symbolBarHideTimer = window.setTimeout(() => {
+			l.symbolBarHideTimer = null;
+			let e = document.getElementById("monkey-tools-inline-symbols"), t = l.symbolBarTextarea, n = document.activeElement;
+			e?.contains(n) || n === t || l.hideInlineSymbolBar();
+		}, 120);
+	},
+	bindInlineSymbolBarActivation: (e, t) => {
+		e.dataset.monkeyToolsInlineBound !== "1" && (e.dataset.monkeyToolsInlineBound = "1", e.addEventListener("focus", l.showInlineSymbolBar), e.addEventListener("focusin", l.showInlineSymbolBar), e.addEventListener("pointerdown", l.showInlineSymbolBar), e.addEventListener("click", l.showInlineSymbolBar), e.addEventListener("blur", l.scheduleInlineSymbolBarHide), t.addEventListener("pointerdown", () => {
+			l.symbolBarHideTimer &&= (clearTimeout(l.symbolBarHideTimer), null);
+		}, !0));
 	},
 	positionInlineSymbolBar: () => {
 		let e = document.getElementById("monkey-tools-inline-symbols"), t = l.getSendTextarea();
 		if (!e || !t) return;
-		let n = t.getBoundingClientRect(), r = Math.max(220, Math.min(n.width, window.innerWidth - 24)), i = Math.max(12, Math.min(n.left, window.innerWidth - r - 12)), a = Math.max(8, n.top - e.offsetHeight - 8);
-		e.style.cssText = `position:fixed;left:${i}px;top:${a}px;width:${r}px;z-index:2147482500;display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;`;
+		let n = t.getBoundingClientRect(), r = Math.max(220, Math.min(n.width, window.innerWidth - 24)), i = Math.max(12, Math.min(n.left, window.innerWidth - r - 12)), a = Math.max(8, n.top - e.offsetHeight - 8), o = e.style.display === "flex" ? "flex" : "none";
+		e.style.cssText = `position:fixed;left:${i}px;top:${a}px;width:${r}px;z-index:2147482500;display:${o};flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;`;
 	},
 	scheduleInlineSymbolBarRetry: () => {
 		l.symbolBarRetryTimer ||= window.setTimeout(() => {
@@ -506,7 +535,7 @@ var e = {
 		}, 600);
 	},
 	stopInlineSymbolBarTracking: () => {
-		l.symbolBarRetryTimer &&= (clearTimeout(l.symbolBarRetryTimer), null);
+		l.symbolBarRetryTimer &&= (clearTimeout(l.symbolBarRetryTimer), null), l.symbolBarHideTimer &&= (clearTimeout(l.symbolBarHideTimer), null);
 	},
 	watchInlineSymbolBarHost: () => {
 		typeof MutationObserver > "u" || (l.symbolBarObserver && l.symbolBarObserver.disconnect(), l.symbolBarObserver = new MutationObserver(() => {
@@ -527,19 +556,20 @@ var e = {
 	},
 	baseCss: () => "\n        <style>\n            @font-face { font-family:\"fugu\"; src:url(\"https://files.catbox.moe/5bdcr7.ttf\") format(\"truetype\"); font-display:swap; font-weight:normal; font-style:normal; }\n            :root { --monkey-tools-font:\"fugu\", var(--mainFontFamily), \"Microsoft YaHei\", sans-serif; --monkey-tools-shadow-color:var(--SmartThemeShadowColor, #80808075); --monkey-tools-shadow-width:var(--shadowWidth, 1); }\n            .punct-settings *, .punct-settings *::before, .punct-settings *::after { box-sizing: border-box; }\n            .popup:has(.punct-settings) { background:#fff !important; border:2px solid #000 !important; border-radius:0 !important; outline:1.5px solid #000 !important; outline-offset:-6px !important; box-shadow:3px 3px 3px #80808075 !important; }\n            .popup:has(.punct-settings) .popup-content, .popup:has(.punct-settings) .popup-body { background:#fff !important; border-radius:0 !important; }\n            .punct-settings { position:relative; overflow-x:hidden; overflow-y:auto; max-height:85vh; color:#000; padding:16px; width:100%; min-width:280px; max-width:620px; font-family:var(--monkey-tools-font); -webkit-overflow-scrolling: touch; background:#fff; text-shadow:0 0 calc(var(--monkey-tools-shadow-width) * 1px) var(--monkey-tools-shadow-color); }\n            .punct-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap: wrap; gap: 8px; }\n            .punct-title { font-size:18px; font-weight:800; letter-spacing:0; background:#fff; border-left:2px solid #000; outline:1.5px solid #000; outline-offset:-7px; padding:10px 18px; }\n            \n            .punct-tabs { display:flex; gap:6px; margin-bottom:16px; background:#f0f0f0; padding:5px; border:1.5px dashed #000; border-radius:0; flex-shrink: 0; }\n            .punct-tab { flex:1; border:1.5px solid transparent; background:transparent; color:#555; border-radius:0; padding:10px 8px; cursor:pointer; font-weight:bold; transition:all 0.2s; text-align:center; font-size:14px; font-family:inherit; text-shadow:inherit; }\n            .punct-tab.active { background:#fff; color:#000; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }\n            \n            .punct-action { border:1.5px solid #000 !important; background:#fff; color:#000; border-radius:2px !important; padding:8px 14px; cursor:pointer; font-weight:700; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; gap:4px; box-shadow:1px 2px 5px #a7a7a7; font-family:inherit; text-shadow:inherit; }\n            .punct-action:hover { background:#f0f0f0; transform:translateY(-1px); box-shadow:3px 3px 3px #80808075; }\n            .punct-action:active { transform:translateY(0); box-shadow:none; }\n            .punct-action.active { background:#e7e7e7; border-color:#000 !important; box-shadow:inset 1px 1px 3px #a7a7a7; transform:none; }\n            \n            .punct-panel { border:1.5px solid #000; border-radius:0; padding:16px; background:#fff; box-shadow:1px 2px 5px #a7a7a7; }\n            .punct-field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; width: 100%; }\n            .punct-field label { font-size:12px; font-weight:700; opacity:1; color:#000; }\n            .punct-field input, .punct-field select, .punct-field textarea, .cmd-search { border:1.5px dashed #000; border-radius:2px; padding:10px 12px; background:#f0f0f0; transition:all 0.2s; outline:none; font-family:inherit; color:#000; width: 100%; text-shadow:inherit; }\n            .punct-field input:focus, .punct-field textarea:focus, .punct-field select:focus, .cmd-search:focus { background:#fff; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }\n            \n            .cmd-toolbar { display:flex; gap:8px; margin-bottom:12px; flex-wrap: wrap; flex-shrink: 0; }\n            .cmd-search { flex:1; min-width: 150px; height:38px; }\n            .cmd-filter-bar { display:flex; flex-wrap:wrap; gap:6px; flex:1; }\n            .cmd-tag { font-size:12px; padding:4px 12px; border-radius:2px; background:#fff; color:#000; cursor:pointer; user-select:none; transition:all 0.2s; font-weight:700; border:1.5px dashed #000; text-shadow:inherit; }\n            .cmd-tag:hover { background:#f0f0f0; color:#000; box-shadow:1px 2px 5px #a7a7a7; }\n            .cmd-tag.active { background:#000; color:#fff; box-shadow:1px 2px 5px #a7a7a7; border-style:solid; }\n            \n            .cmd-editor-wrap { border:1.5px solid #000; background:#fff; padding:16px; border-radius:0; margin-bottom:16px; display:none; box-shadow:1px 2px 5px #a7a7a7; }\n            .cmd-tag-editor { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; align-items:center; }\n            .cmd-tag-add { border:1.5px dashed #000; background:#fff; display:flex; align-items:center; padding:2px 8px; border-radius:2px; transition:border-color 0.2s; }\n            .cmd-tag-add:focus-within { border-color:#222; }\n            .cmd-tag-add input { border:none; background:transparent; width:70px; outline:none; font-size:12px; padding:4px 0; font-family:inherit; text-shadow:inherit; }\n            \n            .cmd-list-wrap { max-height:50vh; overflow-y:auto; padding-right:8px; display:flex; flex-direction:column; gap:12px; scrollbar-width: none; scrollbar-color: transparent transparent; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }\n            .cmd-list-wrap::-webkit-scrollbar { width:6px; }\n            .cmd-list-wrap::-webkit-scrollbar-thumb { background:transparent; border-radius:0; }\n            .cmd-list-wrap::-webkit-scrollbar-thumb:hover { background:transparent; }\n            \n            .cmd-row { border:1.5px solid #000; border-radius:0; padding:14px; background:#fff; cursor:pointer; display:flex; gap:12px; transition:all 0.25s; box-shadow:1px 2px 5px #a7a7a7; position:relative; overflow:hidden; align-items: center; flex-shrink: 0; }\n            .cmd-row:hover { border-color:#000; box-shadow:3px 3px 3px #80808075; transform:translateY(-1px); }\n            .cmd-row.favorite { border-left:4px solid #000; }\n            .cmd-row.dragging { opacity:.55; border-style:dashed; box-shadow:none; transform:none; }\n            .drag-handle { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:2px; color:#000; background:#f0f0f0; border:1.5px dashed #000; cursor:grab; flex-shrink:0; font-weight:900; line-height:1; touch-action:none; }\n            .drag-handle:active { cursor:grabbing; }\n            .symbol-edit-row { touch-action:auto; }\n            .symbol-edit-row.reorder-active { touch-action:none; }\n            @media (hover:none), (pointer:coarse) {\n                .drag-handle { width:42px; height:42px; font-size:18px; }\n                .symbol-edit-row { min-height:58px; padding:8px 10px !important; gap:10px; }\n                .symbol-edit-row input[type=\"checkbox\"] { width:22px; height:22px; }\n            }\n             \n            .cmd-content { flex:1; display:flex; flex-direction:column; gap:6px; min-width: 0; }\n            .cmd-title { font-weight:800; font-size:15px; color:#000; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n            .cmd-text { font-size:12px; color:#333; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-all; }\n            .cmd-tags-display { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }\n            .cmd-tag-mini { font-size:11px; background:#f0f0f0; color:#000; padding:2px 8px; border-radius:2px; font-weight:700; white-space: nowrap; border:1px dashed #000; }\n            \n            .cmd-actions { display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; border-left:1.5px dashed #000; padding-left:12px; flex-shrink:0; }\n            .cmd-btn-icon { cursor:pointer; font-size:16px; opacity:0.5; transition:all 0.2s; user-select:none; }\n            .cmd-btn-icon:hover { opacity:1; transform:scale(1.1); }\n            .cmd-btn-heart { color:#000; opacity:1; }\n            \n            .tag-manage-btn { background:#fff; border:1.5px solid #000; color:#000; cursor:pointer; font-size:12px; font-weight:700; padding:6px 12px; border-radius:2px; white-space:nowrap; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; font-family:inherit; text-shadow:inherit; box-shadow:1px 2px 5px #a7a7a7; }\n            .tag-manage-btn:hover { background:#f0f0f0; color:#000; box-shadow:3px 3px 3px #80808075; }\n            .tag-manage-btn.back-mode { width:34px; height:34px; padding:0; border-radius:2px; background:#fff; box-shadow:1px 2px 5px #a7a7a7; color:#000; }\n            .tag-manage-btn.back-mode:hover { transform:scale(1.04); box-shadow:3px 3px 3px #80808075; background:#f0f0f0; }\n\n            .cmd-modal-overlay { position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:rgba(255,255,255,0.72); backdrop-filter:none; -webkit-backdrop-filter:none; z-index:9999; border-radius:0; display:none; }\n            .cmd-confirm-box { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; border:2px solid #000; border-radius:0; padding:24px; box-shadow:3px 3px 3px #80808075; text-align:center; width:85%; max-width:320px; box-sizing:border-box; outline:1.5px solid #000; outline-offset:-6px; }\n            .cmd-confirm-text { font-size:15px; font-weight:700; color:#000; margin-bottom:20px; line-height:1.6; word-break:break-all; white-space:pre-wrap; }\n            .cmd-confirm-actions { display:flex; justify-content:center; gap:12px; }\n\n            .cmd-quick-inserts { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }\n            .cmd-quick-btn { font-size:12px; font-weight:700; padding:4px 8px; border-radius:2px; background:#fff; border:1.5px dashed #000; color:#000; cursor:pointer; user-select:none; transition:all 0.2s; text-shadow:inherit; }\n            .cmd-quick-btn:hover { background:#f0f0f0; color:#000; border-color:#000; transform:translateY(-1px); box-shadow:1px 2px 5px #a7a7a7; }\n            .cmd-quick-btn:active { transform:scale(0.95); }\n        </style>\n    ",
 	modalHtml: "\n        <div class=\"cmd-modal-overlay\" id=\"custom-modal-layer\">\n            <div class=\"cmd-confirm-box\">\n                <div class=\"cmd-confirm-text\" id=\"custom-modal-msg\"></div>\n                <input type=\"text\" id=\"custom-modal-input\" style=\"display:none; width:100%; box-sizing:border-box; margin-bottom:16px; padding:10px; border-radius:8px; border:1px solid rgba(0,0,0,0.15); font-family:inherit; outline:none;\">\n                <div class=\"cmd-confirm-actions\">\n                    <button class=\"punct-action\" id=\"custom-modal-cancel\" style=\"background:#fff; color:#000;\">取消</button>\n                    <button class=\"punct-action\" id=\"custom-modal-ok\" style=\"background:#000; color:#fff;\">确定</button>\n                </div>\n            </div>\n        </div>\n    ",
-	openCommandPanel: () => {
+	openCommandPanel: (e = "commands") => {
 		if (!window.jQuery) {
 			window.toastr?.error("当前环境缺少 jQuery，无法打开指令面板。");
 			return;
 		}
-		let e = window.jQuery, t = {
+		let t = window.jQuery, n = {
+			activeMainView: e === "symbols" ? "symbols" : "commands",
 			activeTab: Object.keys(c)[0],
 			searchText: "",
 			filterTags: [],
 			editingId: null,
 			editorTags: [],
 			isTagManageMode: !1
-		}, n = [
+		}, r = [
 			{
 				name: "{{char}}",
 				left: "{{char}}",
@@ -551,9 +581,14 @@ var e = {
 				right: ""
 			},
 			...l.getVisibleSymbols()
-		].map((e) => `<span class="cmd-quick-btn" data-left="${l.escapeHtml(e.left)}" data-right="${l.escapeHtml(e.right || "")}">${l.escapeHtml(e.name)}</span>`).join(""), r = e(`
+		].map((e) => `<span class="cmd-quick-btn" data-left="${l.escapeHtml(e.left)}" data-right="${l.escapeHtml(e.right || "")}">${l.escapeHtml(e.name)}</span>`).join(""), i = t(`
             <div class="punct-settings">
                 ${l.baseCss()}
+                <div class="punct-tabs monkey-main-tabs">
+                    <button class="punct-tab monkey-main-tab ${n.activeMainView === "commands" ? "active" : ""}" data-main-view="commands">\u6307\u4EE4\u4ED3\u5E93</button>
+                    <button class="punct-tab monkey-main-tab ${n.activeMainView === "symbols" ? "active" : ""}" data-main-view="symbols">\u7B26\u53F7</button>
+                </div>
+                <div data-main-panel="commands">
                 <div class="punct-head">
                     <div class="punct-title">\u5E38\u7528\u6307\u4EE4\u5E93</div>
                     <div style="display:flex; gap:8px;">
@@ -564,7 +599,7 @@ var e = {
                 </div>
                 
                 <div class="punct-tabs" id="cmd-tabs-container">
-                    ${Object.keys(c).map((e) => `<button class="punct-tab ${t.activeTab === e ? "active" : ""}" data-cat="${e}">${e}</button>`).join("")}
+                    ${Object.keys(c).map((e) => `<button class="punct-tab ${n.activeTab === e ? "active" : ""}" data-cat="${e}">${e}</button>`).join("")}
                 </div>
 
                 <div class="cmd-toolbar">
@@ -602,7 +637,7 @@ var e = {
                     </div>
                     
                     <div class="punct-field">
-                        <div class="cmd-quick-inserts">${n}</div>
+                        <div class="cmd-quick-inserts">${r}</div>
                         <textarea id="cmd-input-text" rows="3" placeholder="\u8F93\u5165\u6307\u4EE4\u5185\u5BB9... (\u5FC5\u586B)"></textarea>
                     </div>
                     
@@ -617,19 +652,147 @@ var e = {
                 </div>
 
                 <div class="cmd-list-wrap" id="cmd-list-container"></div>
+                </div>
+                <div data-main-panel="symbols" style="display:none;">
+                    <div class="punct-head">
+                        <div class="punct-title">\u7B26\u53F7\u6309\u94AE\u8BBE\u7F6E</div>
+                        <label class="punct-action" style="gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="symbol-inline-toggle" style="width:auto;" ${l.getInlineSymbolsEnabled() ? "checked" : ""}>
+                            <span>\u663E\u793A\u7B26\u53F7</span>
+                        </label>
+                    </div>
+                    <div class="punct-tabs" id="symbol-tabs-container">
+                        <button class="punct-tab active" data-symbol-view="add">\u65B0\u589E</button>
+                        <button class="punct-tab" data-symbol-view="edit">\u7F16\u8F91</button>
+                    </div>
+                    <div class="punct-panel" id="symbol-content"></div>
+                </div>
                 ${l.modalHtml}
             </div>
-        `), i = null, a = !1, o = (e) => {
-			r.find("#custom-modal-msg").text(e.msg), i = e.onOk, a = !!e.prompt;
-			let t = r.find("#custom-modal-input");
-			a ? (t.val(e.defaultVal || "").show(), r.find("#custom-modal-ok").css("background", "#222").text("确定")) : (t.hide(), e.isAlert ? r.find("#custom-modal-ok").css("background", "#222").text("我知道了") : r.find("#custom-modal-ok").css("background", "#000").text("确定操作")), e.isAlert ? r.find("#custom-modal-cancel").hide() : r.find("#custom-modal-cancel").show(), r.find("#custom-modal-layer").fadeIn(150), a && setTimeout(() => t.focus(), 160);
+        `), a = null, o = !1, s = (e) => {
+			i.find("#custom-modal-msg").text(e.msg), a = e.onOk, o = !!e.prompt;
+			let t = i.find("#custom-modal-input");
+			o ? (t.val(e.defaultVal || "").show(), i.find("#custom-modal-ok").css("background", "#222").text("确定")) : (t.hide(), e.isAlert ? i.find("#custom-modal-ok").css("background", "#222").text("我知道了") : i.find("#custom-modal-ok").css("background", "#000").text("确定操作")), e.isAlert ? i.find("#custom-modal-cancel").hide() : i.find("#custom-modal-cancel").show(), i.find("#custom-modal-layer").fadeIn(150), o && setTimeout(() => t.focus(), 160);
 		};
-		r.find("#custom-modal-cancel").on("click", () => {
-			i = null, r.find("#custom-modal-layer").fadeOut(150);
-		}), r.find("#custom-modal-ok").on("click", () => {
-			let e = a ? r.find("#custom-modal-input").val() : !0;
-			i && i(e), r.find("#custom-modal-layer").fadeOut(150);
-		}), r.find("#cmd-export-btn").on("click", () => {
+		i.find("#custom-modal-cancel").on("click", () => {
+			a = null, i.find("#custom-modal-layer").fadeOut(150);
+		}), i.find("#custom-modal-ok").on("click", () => {
+			let e = o ? i.find("#custom-modal-input").val() : !0;
+			a && a(e), i.find("#custom-modal-layer").fadeOut(150);
+		});
+		let u = () => {
+			i.find("#symbol-content").html("\n                <div class=\"punct-field\"><label>类型</label><select data-add-type><option value=\"single\">单独标点</option><option value=\"pair\">成对标点</option></select></div>\n                <div class=\"punct-field\"><label>按钮名称</label><input data-add-name placeholder=\"显示在按钮上\"></div>\n                <div style=\"display:grid; grid-template-columns:1fr 1fr; gap:12px;\">\n                    <div class=\"punct-field\"><label data-left-label>要插入的符号</label><input data-add-left></div>\n                    <div class=\"punct-field\" data-right-wrap style=\"display:none;\"><label>右侧符号</label><input data-add-right></div>\n                </div>\n                <div style=\"display:flex; justify-content:flex-end; margin-top:16px;\"><button class=\"punct-action\" data-save-add style=\"background:#000; color:#fff;\">保存</button></div>\n            "), i.find("[data-add-type]").on("change", function() {
+				let e = window.jQuery(this).val() === "pair";
+				i.find("[data-right-wrap]").toggle(e), i.find("[data-left-label]").text(e ? "左侧符号" : "要插入的符号");
+			}), i.find("[data-save-add]").on("click", () => {
+				let e = i.find("[data-add-type]").val(), t = String(i.find("[data-add-name]").val() || "").trim(), n = String(i.find("[data-add-left]").val() || ""), r = e === "pair" ? String(i.find("[data-add-right]").val() || "") : "";
+				if (!t || !n || e === "pair" && !r) return s({
+					msg: "请填完必填项。",
+					isAlert: !0
+				});
+				let a = l.loadCustomSymbols();
+				a.push({
+					name: t,
+					left: n,
+					right: r
+				}), l.saveCustomSymbols(a), l.forgetDeletedName(t), l.register(), f();
+			});
+		}, d = (e, t) => {
+			i.find("#symbol-content").html(`
+                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-edit-name value="${l.escapeHtml(e.name)}"></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="punct-field"><label>\u5DE6\u4FA7\u7B26\u53F7</label><input data-edit-left value="${l.escapeHtml(e.left)}"></div>
+                    <div class="punct-field"><label>\u53F3\u4FA7\u7B26\u53F7 (\u53EF\u7559\u7A7A)</label><input data-edit-right value="${l.escapeHtml(e.right || "")}"></div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">\u8FD4\u56DE</button>
+                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">\u4FDD\u5B58</button>
+                </div>
+            `), i.find("[data-back-edit]").on("click", f), i.find("[data-save-edit]").on("click", () => {
+				let e = String(i.find("[data-edit-name]").val() || "").trim(), n = String(i.find("[data-edit-left]").val() || ""), r = String(i.find("[data-edit-right]").val() || "");
+				if (!e || !n) return s({
+					msg: "必填项不能为空",
+					isAlert: !0
+				});
+				e !== t && (l.rememberDeletedName(t), l.hideButtonByName(t), l.forgetDeletedName(e));
+				let a = l.loadCustomSymbols(), o = a.findIndex((e) => e.name === t);
+				o !== -1 && (a[o] = {
+					name: e,
+					left: n,
+					right: r
+				}, l.saveCustomSymbols(a), l.register(), f());
+			});
+		}, f = () => {
+			let e = l.getVisibleSymbols(), t = new Set(l.defaultSymbols.map((e) => e.name)), n = e.length ? e.map((e) => {
+				let n = t.has(e.name);
+				return `<div class="cmd-row symbol-edit-row" data-name="${l.escapeHtml(e.name)}" draggable="true" style="align-items:center; padding:10px 14px;">
+                    <span class="drag-handle" title="\u62D6\u52A8\u6392\u5E8F">=</span>
+                    <input type="checkbox" data-pick>
+                    <div class="cmd-content"><div class="cmd-text" style="font-weight:600; font-size:14px; color:#111;">${l.escapeHtml(e.name)}</div></div>
+                    <button class="punct-action" data-edit-one ${n ? "style=\"opacity:.45;\" title=\"默认按钮只能删\"" : ""}>\u4FEE\u6539</button>
+                </div>`;
+			}).join("") : "<div style=\"text-align:center; padding:20px; color:#999;\">暂无可编辑按钮</div>";
+			i.find("#symbol-content").html(`<div class="cmd-list-wrap">${n}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>\u5220\u9664\u9009\u4E2D</button></div>`);
+			let r = i.find(".cmd-list-wrap"), a = null, o = null, c = () => {
+				let e = r.find(".cmd-row").map(function() {
+					return window.jQuery(this).attr("data-name");
+				}).get();
+				l.saveSymbolOrder(e), l.register();
+			};
+			r.on("dragstart", ".cmd-row", function(e) {
+				a = this, window.jQuery(this).addClass("dragging"), e.originalEvent.dataTransfer.effectAllowed = "move", e.originalEvent.dataTransfer.setData("text/plain", window.jQuery(this).attr("data-name"));
+			}), r.on("dragover", ".cmd-row", function(e) {
+				e.preventDefault();
+				let t = window.jQuery(this);
+				if (!a || this === a) return;
+				let n = this.getBoundingClientRect();
+				e.originalEvent.clientY > n.top + n.height / 2 ? t.after(a) : t.before(a);
+			}), r.on("dragend", ".cmd-row", function() {
+				window.jQuery(this).removeClass("dragging"), a && c(), a = null;
+			}), r.on("pointerdown", ".drag-handle", function(e) {
+				let t = window.jQuery(this).closest(".cmd-row")[0];
+				if (t) {
+					a = t, o = e.originalEvent.pointerId;
+					try {
+						this.setPointerCapture?.(o);
+					} catch {}
+					window.jQuery(t).addClass("dragging reorder-active"), window.jQuery(document).one("pointerup pointercancel", () => {
+						a && (window.jQuery(a).removeClass("dragging reorder-active"), c(), a = null, o = null);
+					}), e.preventDefault();
+				}
+			}), r.on("pointermove", function(e) {
+				if (!a || o !== null && e.originalEvent.pointerId !== o) return;
+				let t = e.originalEvent, n = document.elementFromPoint(t.clientX, t.clientY)?.closest?.(".cmd-row");
+				if (!n || n === a || !window.jQuery.contains(r[0], n)) return;
+				let i = n.getBoundingClientRect();
+				t.clientY > i.top + i.height / 2 ? window.jQuery(n).after(a) : window.jQuery(n).before(a), e.preventDefault();
+			}), i.find("[data-edit-one]").on("click", function() {
+				let e = window.jQuery(this).closest(".cmd-row").attr("data-name");
+				if (t.has(e)) return s({
+					msg: "默认自带标点仅支持删除",
+					isAlert: !0
+				});
+				let n = l.loadCustomSymbols().find((t) => t.name === e);
+				n && d(n, e);
+			}), i.find("[data-delete-picked]").on("click", () => {
+				let e = i.find("[data-pick]:checked").map(function() {
+					return window.jQuery(this).closest(".cmd-row").attr("data-name");
+				}).get();
+				if (!e.length) return s({
+					msg: "请先勾选",
+					isAlert: !0
+				});
+				s({
+					msg: `\u786E\u5B9A\u8981\u5220\u9664\u9009\u4E2D\u7684 ${e.length} \u4E2A\u6807\u70B9\u6309\u94AE\u5417\uFF1F`,
+					onOk: () => {
+						l.deleteCustomByNames(e), f();
+					}
+				});
+			});
+		}, p = () => {
+			i.find("[data-main-panel=\"commands\"]").toggle(n.activeMainView === "commands"), i.find("[data-main-panel=\"symbols\"]").toggle(n.activeMainView === "symbols"), i.find(".monkey-main-tab").removeClass("active"), i.find(`.monkey-main-tab[data-main-view="${n.activeMainView}"]`).addClass("active"), n.activeMainView === "commands" ? h() : i.find("#symbol-tabs-container .punct-tab.active").data("symbol-view") === "edit" ? f() : u();
+		};
+		i.find("#cmd-export-btn").on("click", () => {
 			let e = {
 				version: 1,
 				commands: l.loadCommands(),
@@ -638,9 +801,9 @@ var e = {
 				symbols: l.loadCustomSymbols()
 			}, t = new Blob([JSON.stringify(e, null, 2)], { type: "application/json" }), n = URL.createObjectURL(t), r = document.createElement("a");
 			r.href = n, r.download = `sillytavern_commands_backup_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, document.body.appendChild(r), r.click(), document.body.removeChild(r), URL.revokeObjectURL(n), window.toastr && toastr.success("数据导出成功！");
-		}), r.find("#cmd-import-btn").on("click", () => {
-			r.find("#cmd-import-file").click();
-		}), r.find("#cmd-import-file").on("change", function(e) {
+		}), i.find("#cmd-import-btn").on("click", () => {
+			i.find("#cmd-import-file").click();
+		}), i.find("#cmd-import-file").on("change", function(e) {
 			let t = e.target.files[0];
 			if (!t) return;
 			let n = new FileReader();
@@ -648,7 +811,7 @@ var e = {
 				try {
 					let t = JSON.parse(e.target.result);
 					if (!t.commands && !t.categories && !t.symbols && !t.tags) throw Error("Invalid Format");
-					o({
+					s({
 						msg: "即将导入备份数据！\n为防止误删，导入的数据将与现有数据进行【合并】。\n是否继续？",
 						onOk: () => {
 							let e = Array.isArray(t.commands) ? t.commands : [], n = l.loadCommands(), r = 0;
@@ -670,38 +833,38 @@ var e = {
 									!e.find((e) => e.name === t.name) && t.name && typeof t.left == "string" && e.push(t);
 								}), l.saveCustomSymbols(e), l.register();
 							}
-							u(), window.toastr && toastr.success(`\u5BFC\u5165\u6210\u529F\uFF01\u5171\u65B0\u589E ${r} \u6761\u6307\u4EE4\u3002`);
+							h(), window.toastr && toastr.success(`\u5BFC\u5165\u6210\u529F\uFF01\u5171\u65B0\u589E ${r} \u6761\u6307\u4EE4\u3002`);
 						}
 					});
 				} catch {
-					o({
+					s({
 						msg: "读取失败：文件格式不正确或已损坏！",
 						isAlert: !0
 					});
 				}
-				r.find("#cmd-import-file").val("");
+				i.find("#cmd-import-file").val("");
 			}, n.readAsText(t);
 		});
-		let s = null;
-		r.on("focus", "#cmd-input-title, #cmd-input-text, #cmd-cat-prefix, #cmd-cat-suffix", function() {
-			s = this;
-		}), r.on("click", ".cmd-quick-btn", function(t) {
-			t.preventDefault();
-			let n = e(this).attr("data-left") || "", i = e(this).attr("data-right") || "";
-			s ||= r.find("#cmd-input-text")[0], s.focus();
-			let a = s.selectionStart || 0, o = s.selectionEnd || 0, c = s.value || "", l = c.slice(a, o), u = c.slice(0, a) + n + l + i + c.slice(o);
-			s.value = u, e(s).trigger("input");
-			let d = a + n.length + l.length;
-			s.setSelectionRange(d, d);
+		let m = null;
+		i.on("focus", "#cmd-input-title, #cmd-input-text, #cmd-cat-prefix, #cmd-cat-suffix", function() {
+			m = this;
+		}), i.on("click", ".cmd-quick-btn", function(e) {
+			e.preventDefault();
+			let n = t(this).attr("data-left") || "", r = t(this).attr("data-right") || "";
+			m ||= i.find("#cmd-input-text")[0], m.focus();
+			let a = m.selectionStart || 0, o = m.selectionEnd || 0, s = m.value || "", c = s.slice(a, o), l = s.slice(0, a) + n + c + r + s.slice(o);
+			m.value = l, t(m).trigger("input");
+			let u = a + n.length + c.length;
+			m.setSelectionRange(u, u);
 		});
-		let u = () => {
-			let e = l.loadCommands(), n = l.getCombinedTags();
-			if (t.isTagManageMode) {
-				r.find(".cmd-toolbar, #cmd-filter-container, #cmd-editor-panel, #cmd-cat-panel").hide(), r.find("#cmd-manage-tags-btn").html("<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" stroke=\"currentColor\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 12H5M12 19l-7-7 7-7\"/></svg>").addClass("back-mode").attr("title", "返回列表");
+		let h = () => {
+			let e = l.loadCommands(), t = l.getCombinedTags();
+			if (n.isTagManageMode) {
+				i.find(".cmd-toolbar, #cmd-filter-container, #cmd-editor-panel, #cmd-cat-panel").hide(), i.find("#cmd-manage-tags-btn").html("<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" stroke=\"currentColor\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 12H5M12 19l-7-7 7-7\"/></svg>").addClass("back-mode").attr("title", "返回列表");
 				let e = "\n                    <div style=\"display:flex; gap:8px; margin-bottom:12px;\">\n                        <input type=\"text\" id=\"manage-new-tag-input\" class=\"cmd-search\" placeholder=\"输入新标签名称...\" style=\"height:38px;\">\n                        <button class=\"punct-action\" id=\"manage-add-tag-btn\" style=\"height:38px; background:#000; color:#fff; padding:0 16px;\">新增标签</button>\n                    </div>\n                ";
-				if (n.length === 0) r.find("#cmd-list-container").html(e + "<div style=\"text-align:center; padding:30px; color:#999;\">当前没有任何标签</div>");
+				if (t.length === 0) i.find("#cmd-list-container").html(e + "<div style=\"text-align:center; padding:30px; color:#999;\">当前没有任何标签</div>");
 				else {
-					let t = n.map((e) => `
+					let n = t.map((e) => `
                         <div class="cmd-row" style="align-items:center;">
                             <div class="cmd-content" style="flex-direction:row; align-items:center;">
                                 <div class="cmd-tag active" style="cursor:default; box-shadow:none;">${l.escapeHtml(e)}</div>
@@ -712,19 +875,19 @@ var e = {
                             </div>
                         </div>
                     `).join("");
-					r.find("#cmd-list-container").html(e + t);
+					i.find("#cmd-list-container").html(e + n);
 				}
 				return;
 			}
-			r.find(".cmd-toolbar, #cmd-filter-container").show(), r.find("#cmd-manage-tags-btn").html("管理标签").removeClass("back-mode").removeAttr("title"), r.find("#cmd-toggle-cat-btn").hasClass("active") ? (r.find("#cmd-cat-panel").css("display", "block"), r.find("#current-cat-name").text(t.activeTab)) : r.find("#cmd-cat-panel").css("display", "none"), t.editingId || r.find("#cmd-toggle-editor-btn").text().includes("收起") ? r.find("#cmd-editor-panel").css("display", "block") : r.find("#cmd-editor-panel").css("display", "none"), r.find("#cmd-filter-container").html(n.map((e) => `<div class="cmd-tag ${t.filterTags.includes(e) ? "active" : ""}" data-tag="${l.escapeHtml(e)}">${l.escapeHtml(e)}</div>`).join("") + (t.filterTags.length > 0 ? "<div class=\"cmd-tag active\" style=\"background:#000;\" id=\"cmd-clear-filter\">✖ 清除筛选</div>" : ""));
-			let i = Array.from(new Set([...n, ...t.editorTags])).sort();
-			r.find("#cmd-editor-tags").html(i.map((e) => `<div class="cmd-tag ${t.editorTags.includes(e) ? "active" : ""} editor-tag-btn" data-tag="${l.escapeHtml(e)}">${l.escapeHtml(e)}</div>`).join("") + "<div class=\"cmd-tag-add\"><input type=\"text\" id=\"cmd-new-tag-input\" placeholder=\"+新标签\"><button id=\"cmd-add-tag-btn\" style=\"border:none;background:none;cursor:pointer;font-weight:bold;color:#666;\">✔</button></div>");
-			let a = e.filter((e) => e.category === t.activeTab);
-			if (t.filterTags.length > 0 && (a = a.filter((e) => e.tags && t.filterTags.every((t) => e.tags.includes(t)))), t.searchText) {
-				let e = t.searchText.toLowerCase();
+			i.find(".cmd-toolbar, #cmd-filter-container").show(), i.find("#cmd-manage-tags-btn").html("管理标签").removeClass("back-mode").removeAttr("title"), i.find("#cmd-toggle-cat-btn").hasClass("active") ? (i.find("#cmd-cat-panel").css("display", "block"), i.find("#current-cat-name").text(n.activeTab)) : i.find("#cmd-cat-panel").css("display", "none"), n.editingId || i.find("#cmd-toggle-editor-btn").text().includes("收起") ? i.find("#cmd-editor-panel").css("display", "block") : i.find("#cmd-editor-panel").css("display", "none"), i.find("#cmd-filter-container").html(t.map((e) => `<div class="cmd-tag ${n.filterTags.includes(e) ? "active" : ""}" data-tag="${l.escapeHtml(e)}">${l.escapeHtml(e)}</div>`).join("") + (n.filterTags.length > 0 ? "<div class=\"cmd-tag active\" style=\"background:#000;\" id=\"cmd-clear-filter\">✖ 清除筛选</div>" : ""));
+			let r = Array.from(new Set([...t, ...n.editorTags])).sort();
+			i.find("#cmd-editor-tags").html(r.map((e) => `<div class="cmd-tag ${n.editorTags.includes(e) ? "active" : ""} editor-tag-btn" data-tag="${l.escapeHtml(e)}">${l.escapeHtml(e)}</div>`).join("") + "<div class=\"cmd-tag-add\"><input type=\"text\" id=\"cmd-new-tag-input\" placeholder=\"+新标签\"><button id=\"cmd-add-tag-btn\" style=\"border:none;background:none;cursor:pointer;font-weight:bold;color:#666;\">✔</button></div>");
+			let a = e.filter((e) => e.category === n.activeTab);
+			if (n.filterTags.length > 0 && (a = a.filter((e) => e.tags && n.filterTags.every((t) => e.tags.includes(t)))), n.searchText) {
+				let e = n.searchText.toLowerCase();
 				a = a.filter((t) => t.title && t.title.toLowerCase().includes(e) || t.text.toLowerCase().includes(e) || t.tags && t.tags.some((t) => t.toLowerCase().includes(e)));
 			}
-			if (a.sort((e, t) => e.isFavorite === t.isFavorite ? t.timestamp - e.timestamp : e.isFavorite ? -1 : 1), a.length === 0) r.find("#cmd-list-container").html("<div style=\"text-align:center; padding:40px; color:#999;\">没有找到指令</div>");
+			if (a.sort((e, t) => e.isFavorite === t.isFavorite ? t.timestamp - e.timestamp : e.isFavorite ? -1 : 1), a.length === 0) i.find("#cmd-list-container").html("<div style=\"text-align:center; padding:40px; color:#999;\">没有找到指令</div>");
 			else {
 				let e = a.map((e) => {
 					let t = e.title || e.text.substring(0, 10);
@@ -743,121 +906,127 @@ var e = {
                     </div>
                 `;
 				});
-				r.find("#cmd-list-container").html(e.join(""));
+				i.find("#cmd-list-container").html(e.join(""));
 			}
-		}, d = () => {
-			t.editingId = null, t.editorTags = [], r.find("#cmd-input-title").val(""), r.find("#cmd-input-text").val(""), r.find("#cmd-editor-panel").css("display", "none"), r.find("#cmd-toggle-editor-btn").text("➕ 新建"), r.find("#cmd-save-btn").text("保存指令"), u();
+		}, g = () => {
+			n.editingId = null, n.editorTags = [], i.find("#cmd-input-title").val(""), i.find("#cmd-input-text").val(""), i.find("#cmd-editor-panel").css("display", "none"), i.find("#cmd-toggle-editor-btn").text("➕ 新建"), i.find("#cmd-save-btn").text("保存指令"), h();
 		};
-		r.on("click", ".punct-tab", function() {
-			if (r.find(".punct-tab").removeClass("active"), e(this).addClass("active"), t.activeTab = e(this).data("cat"), t.filterTags = [], t.searchText = "", r.find("#cmd-search-input").val(""), t.isTagManageMode = !1, r.find("#cmd-toggle-cat-btn").hasClass("active")) {
-				let e = l.loadCategorySettings()[t.activeTab] || {
+		i.on("click", ".monkey-main-tab", function() {
+			n.activeMainView = String(t(this).data("main-view")), p();
+		}), i.on("change", "#symbol-inline-toggle", function() {
+			l.saveInlineSymbolsEnabled(t(this).is(":checked")), t(this).is(":checked") ? l.buildInlineSymbolBar() : document.getElementById("monkey-tools-inline-symbols")?.remove();
+		}), i.on("click", "#symbol-tabs-container .punct-tab", function() {
+			i.find("#symbol-tabs-container .punct-tab").removeClass("active"), t(this).addClass("active"), t(this).data("symbol-view") === "add" ? u() : f();
+		}), i.on("click", "#cmd-tabs-container .punct-tab", function() {
+			if (i.find("#cmd-tabs-container .punct-tab").removeClass("active"), t(this).addClass("active"), n.activeTab = t(this).data("cat"), n.filterTags = [], n.searchText = "", i.find("#cmd-search-input").val(""), n.isTagManageMode = !1, i.find("#cmd-toggle-cat-btn").hasClass("active")) {
+				let e = l.loadCategorySettings()[n.activeTab] || {
 					prefix: "",
 					suffix: ""
 				};
-				r.find("#cmd-cat-prefix").val(e.prefix), r.find("#cmd-cat-suffix").val(e.suffix);
+				i.find("#cmd-cat-prefix").val(e.prefix), i.find("#cmd-cat-suffix").val(e.suffix);
 			}
-			t.editingId && (t.editingId = null, r.find("#cmd-save-btn").text("保存指令")), u();
-		}), r.on("click", "#cmd-toggle-cat-btn", function() {
-			if (e(this).hasClass("active")) e(this).removeClass("active"), u();
+			n.editingId && (n.editingId = null, i.find("#cmd-save-btn").text("保存指令")), h();
+		}), i.on("click", "#cmd-toggle-cat-btn", function() {
+			if (t(this).hasClass("active")) t(this).removeClass("active"), h();
 			else {
-				d(), e(this).addClass("active");
-				let n = l.loadCategorySettings()[t.activeTab] || {
+				g(), t(this).addClass("active");
+				let e = l.loadCategorySettings()[n.activeTab] || {
 					prefix: "",
 					suffix: ""
 				};
-				r.find("#cmd-cat-prefix").val(n.prefix), r.find("#cmd-cat-suffix").val(n.suffix), u();
+				i.find("#cmd-cat-prefix").val(e.prefix), i.find("#cmd-cat-suffix").val(e.suffix), h();
 			}
-		}), r.find("#cmd-cat-cancel-btn").on("click", () => {
-			r.find("#cmd-toggle-cat-btn").removeClass("active"), u();
-		}), r.find("#cmd-cat-save-btn").on("click", () => {
-			let e = r.find("#cmd-cat-prefix").val(), n = r.find("#cmd-cat-suffix").val(), i = l.loadCategorySettings();
-			i[t.activeTab] || (i[t.activeTab] = {}), i[t.activeTab].prefix = e, i[t.activeTab].suffix = n, l.saveCategorySettings(i), u(), window.toastr && toastr.success("格式保存成功");
-		}), r.on("click", "#cmd-manage-tags-btn", () => {
-			t.isTagManageMode = !t.isTagManageMode, t.isTagManageMode && (d(), r.find("#cmd-toggle-cat-btn").removeClass("active")), u();
-		}), r.on("click", "#manage-add-tag-btn", function() {
-			let e = r.find("#manage-new-tag-input").val().trim();
+		}), i.find("#cmd-cat-cancel-btn").on("click", () => {
+			i.find("#cmd-toggle-cat-btn").removeClass("active"), h();
+		}), i.find("#cmd-cat-save-btn").on("click", () => {
+			let e = i.find("#cmd-cat-prefix").val(), t = i.find("#cmd-cat-suffix").val(), r = l.loadCategorySettings();
+			r[n.activeTab] || (r[n.activeTab] = {}), r[n.activeTab].prefix = e, r[n.activeTab].suffix = t, l.saveCategorySettings(r), h(), window.toastr && toastr.success("格式保存成功");
+		}), i.on("click", "#cmd-manage-tags-btn", () => {
+			n.isTagManageMode = !n.isTagManageMode, n.isTagManageMode && (g(), i.find("#cmd-toggle-cat-btn").removeClass("active")), h();
+		}), i.on("click", "#manage-add-tag-btn", function() {
+			let e = i.find("#manage-new-tag-input").val().trim();
 			if (!e) return;
 			let t = l.loadGlobalTags();
-			t.includes(e) ? o({
+			t.includes(e) ? s({
 				msg: "标签已存在",
 				isAlert: !0
-			}) : (t.push(e), l.saveGlobalTags(t), u(), setTimeout(() => r.find("#manage-new-tag-input").focus(), 10));
-		}), r.on("click", ".tag-edit-btn", function() {
-			let n = String(e(this).attr("data-tag"));
-			o({
-				msg: `\u5C06\u6807\u7B7E [${n}] \u91CD\u547D\u540D\u4E3A:`,
+			}) : (t.push(e), l.saveGlobalTags(t), h(), setTimeout(() => i.find("#manage-new-tag-input").focus(), 10));
+		}), i.on("click", ".tag-edit-btn", function() {
+			let e = String(t(this).attr("data-tag"));
+			s({
+				msg: `\u5C06\u6807\u7B7E [${e}] \u91CD\u547D\u540D\u4E3A:`,
 				prompt: !0,
-				defaultVal: n,
-				onOk: (e) => {
-					if (e && e.trim() && e.trim() !== n) {
-						let r = e.trim(), i = l.loadCommands();
-						i.forEach((e) => {
-							e.tags && e.tags.includes(n) && (e.tags = e.tags.map((e) => e === n ? r : e));
+				defaultVal: e,
+				onOk: (t) => {
+					if (t && t.trim() && t.trim() !== e) {
+						let r = t.trim(), i = l.loadCommands();
+						i.forEach((t) => {
+							t.tags && t.tags.includes(e) && (t.tags = t.tags.map((t) => t === e ? r : t));
 						}), l.saveCommands(i);
 						let a = l.loadGlobalTags();
-						a.includes(n) && (a[a.indexOf(n)] = r, l.saveGlobalTags(a)), t.filterTags.includes(n) && (t.filterTags = t.filterTags.map((e) => e === n ? r : e)), u();
+						a.includes(e) && (a[a.indexOf(e)] = r, l.saveGlobalTags(a)), n.filterTags.includes(e) && (n.filterTags = n.filterTags.map((t) => t === e ? r : t)), h();
 					}
 				}
 			});
-		}), r.on("click", ".tag-del-btn", function() {
-			let n = String(e(this).attr("data-tag"));
-			o({
-				msg: `\u786E\u5B9A\u8981\u5168\u5C40\u5220\u9664\u6807\u7B7E [${n}] \u5417\uFF1F\n\u5305\u542B\u6B64\u6807\u7B7E\u7684\u6307\u4EE4\u4E0D\u4F1A\u88AB\u5220\u9664\uFF0C\u53EA\u662F\u5931\u53BB\u8BE5\u6807\u7B7E\u3002`,
+		}), i.on("click", ".tag-del-btn", function() {
+			let e = String(t(this).attr("data-tag"));
+			s({
+				msg: `\u786E\u5B9A\u8981\u5168\u5C40\u5220\u9664\u6807\u7B7E [${e}] \u5417\uFF1F\n\u5305\u542B\u6B64\u6807\u7B7E\u7684\u6307\u4EE4\u4E0D\u4F1A\u88AB\u5220\u9664\uFF0C\u53EA\u662F\u5931\u53BB\u8BE5\u6807\u7B7E\u3002`,
 				onOk: () => {
-					let e = l.loadCommands();
-					e.forEach((e) => {
-						e.tags && e.tags.includes(n) && (e.tags = e.tags.filter((e) => e !== n));
-					}), l.saveCommands(e);
+					let t = l.loadCommands();
+					t.forEach((t) => {
+						t.tags && t.tags.includes(e) && (t.tags = t.tags.filter((t) => t !== e));
+					}), l.saveCommands(t);
 					let r = l.loadGlobalTags();
-					r = r.filter((e) => e !== n), l.saveGlobalTags(r), t.filterTags.includes(n) && (t.filterTags = t.filterTags.filter((e) => e !== n)), u();
+					r = r.filter((t) => t !== e), l.saveGlobalTags(r), n.filterTags.includes(e) && (n.filterTags = n.filterTags.filter((t) => t !== e)), h();
 				}
 			});
-		}), r.on("click", ".editor-tag-btn", function() {
-			let n = String(e(this).attr("data-tag"));
-			t.editorTags.includes(n) ? t.editorTags = t.editorTags.filter((e) => e !== n) : t.editorTags.push(n), u();
-		}), r.on("click", "#cmd-add-tag-btn", function(e) {
+		}), i.on("click", ".editor-tag-btn", function() {
+			let e = String(t(this).attr("data-tag"));
+			n.editorTags.includes(e) ? n.editorTags = n.editorTags.filter((t) => t !== e) : n.editorTags.push(e), h();
+		}), i.on("click", "#cmd-add-tag-btn", function(e) {
 			e.preventDefault();
-			let n = r.find("#cmd-new-tag-input").val().trim();
-			if (n && !t.editorTags.includes(n)) {
-				t.editorTags.push(n);
+			let t = i.find("#cmd-new-tag-input").val().trim();
+			if (t && !n.editorTags.includes(t)) {
+				n.editorTags.push(t);
 				let e = l.loadGlobalTags();
-				e.includes(n) || (e.push(n), l.saveGlobalTags(e));
+				e.includes(t) || (e.push(t), l.saveGlobalTags(e));
 			}
-			u(), setTimeout(() => r.find("#cmd-new-tag-input").focus(), 10);
-		}), r.find("#cmd-search-input").on("input", function() {
-			t.searchText = e(this).val().trim(), u();
-		}), r.on("click", ".cmd-filter-bar .cmd-tag", function() {
-			if (e(this).attr("id") === "cmd-clear-filter") t.filterTags = [];
+			h(), setTimeout(() => i.find("#cmd-new-tag-input").focus(), 10);
+		}), i.find("#cmd-search-input").on("input", function() {
+			n.searchText = t(this).val().trim(), h();
+		}), i.on("click", ".cmd-filter-bar .cmd-tag", function() {
+			if (t(this).attr("id") === "cmd-clear-filter") n.filterTags = [];
 			else {
-				let n = String(e(this).attr("data-tag"));
-				t.filterTags.includes(n) ? t.filterTags = t.filterTags.filter((e) => e !== n) : t.filterTags.push(n);
+				let e = String(t(this).attr("data-tag"));
+				n.filterTags.includes(e) ? n.filterTags = n.filterTags.filter((t) => t !== e) : n.filterTags.push(e);
 			}
-			u();
-		}), r.on("click", "#cmd-toggle-editor-btn", function() {
-			let t = r.find("#cmd-editor-panel");
-			t.css("display") === "none" ? (d(), r.find("#cmd-toggle-cat-btn").removeClass("active"), t.css("display", "block"), e(this).text("▲ 收起"), u()) : d();
-		}), r.find("#cmd-cancel-btn").on("click", d), r.find("#cmd-save-btn").on("click", () => {
-			let e = r.find("#cmd-input-text").val().trim();
-			if (!e) return o({
+			h();
+		}), i.on("click", "#cmd-toggle-editor-btn", function() {
+			let e = i.find("#cmd-editor-panel");
+			e.css("display") === "none" ? (g(), i.find("#cmd-toggle-cat-btn").removeClass("active"), e.css("display", "block"), t(this).text("▲ 收起"), h()) : g();
+		}), i.find("#cmd-cancel-btn").on("click", g), i.find("#cmd-save-btn").on("click", () => {
+			let e = i.find("#cmd-input-text").val().trim();
+			if (!e) return s({
 				msg: "指令内容不能为空！",
 				isAlert: !0
 			});
-			let n = r.find("#cmd-input-title").val().trim() || e.substring(0, 10), i = l.loadCommands();
-			if (t.editingId) {
-				let r = i.findIndex((e) => e.id === t.editingId);
-				r !== -1 && (i[r].title = n, i[r].text = e, i[r].tags = [...t.editorTags]);
-			} else i.push({
+			let t = i.find("#cmd-input-title").val().trim() || e.substring(0, 10), r = l.loadCommands();
+			if (n.editingId) {
+				let i = r.findIndex((e) => e.id === n.editingId);
+				i !== -1 && (r[i].title = t, r[i].text = e, r[i].tags = [...n.editorTags]);
+			} else r.push({
 				id: l.generateId(),
-				category: t.activeTab,
-				title: n,
+				category: n.activeTab,
+				title: t,
 				text: e,
 				isFavorite: !1,
-				tags: [...t.editorTags],
+				tags: [...n.editorTags],
 				timestamp: Date.now()
 			});
-			l.saveCommands(i), d();
-		}), r.on("click", ".copy-trigger", function() {
-			let t = e(this).closest(".cmd-row").data("id"), n = l.loadCommands().find((e) => e.id === t);
+			l.saveCommands(r), g();
+		}), i.on("click", ".copy-trigger", function() {
+			let e = t(this).closest(".cmd-row").data("id"), n = l.loadCommands().find((t) => t.id === e);
 			if (n) {
 				let e = l.loadCategorySettings()[n.category] || {
 					prefix: "",
@@ -865,169 +1034,31 @@ var e = {
 				};
 				l.copyToClipboard((e.prefix || "") + n.text + (e.suffix || ""));
 			}
-		}), r.on("click", ".fav-trigger", function(t) {
-			t.stopPropagation();
-			let n = e(this).closest(".cmd-row").data("id"), r = l.loadCommands(), i = r.findIndex((e) => e.id === n);
-			i !== -1 && (r[i].isFavorite = !r[i].isFavorite, l.saveCommands(r), u());
-		}), r.on("click", ".edit-trigger", function(n) {
-			n.stopPropagation();
-			let i = e(this).closest(".cmd-row").data("id"), a = l.loadCommands().find((e) => e.id === i);
-			a && (t.editingId = a.id, t.editorTags = [...a.tags || []], r.find("#cmd-input-title").val(a.title || ""), r.find("#cmd-input-text").val(a.text), r.find("#cmd-toggle-cat-btn").removeClass("active"), r.find("#cmd-editor-panel").css("display", "block"), r.find("#cmd-toggle-editor-btn").text("▲ 收起"), r.find("#cmd-save-btn").text("保存修改"), u());
-		}), r.on("click", ".del-trigger", function(t) {
-			t.stopPropagation();
-			let n = e(this).closest(".cmd-row").data("id"), r = l.loadCommands().find((e) => e.id === n);
-			r && o({
+		}), i.on("click", ".fav-trigger", function(e) {
+			e.stopPropagation();
+			let n = t(this).closest(".cmd-row").data("id"), r = l.loadCommands(), i = r.findIndex((e) => e.id === n);
+			i !== -1 && (r[i].isFavorite = !r[i].isFavorite, l.saveCommands(r), h());
+		}), i.on("click", ".edit-trigger", function(e) {
+			e.stopPropagation();
+			let r = t(this).closest(".cmd-row").data("id"), a = l.loadCommands().find((e) => e.id === r);
+			a && (n.editingId = a.id, n.editorTags = [...a.tags || []], i.find("#cmd-input-title").val(a.title || ""), i.find("#cmd-input-text").val(a.text), i.find("#cmd-toggle-cat-btn").removeClass("active"), i.find("#cmd-editor-panel").css("display", "block"), i.find("#cmd-toggle-editor-btn").text("▲ 收起"), i.find("#cmd-save-btn").text("保存修改"), h());
+		}), i.on("click", ".del-trigger", function(e) {
+			e.stopPropagation();
+			let n = t(this).closest(".cmd-row").data("id"), r = l.loadCommands().find((e) => e.id === n);
+			r && s({
 				msg: `\u4F60\u786E\u5B9A\u5220\u9664 [${r.category}] \u4E0B\u9762\u7684 1 \u6761\u6307\u4EE4\u5417\uFF1F`,
 				onOk: () => {
 					let e = l.loadCommands().filter((e) => e.id !== n);
-					l.saveCommands(e), u();
+					l.saveCommands(e), h();
 				}
 			});
-		}), u(), l.openPopup(r, {
+		}), p(), l.openPopup(i, {
 			okButton: "关闭",
 			forceCustom: !0
 		});
 	},
 	openSettings: () => {
-		if (!window.jQuery) {
-			window.toastr?.error("当前环境缺少 jQuery，无法打开符号设置。");
-			return;
-		}
-		let e = window.jQuery, t = e(`
-            <div class="punct-settings">
-                ${l.baseCss()}
-                <div class="punct-head"><div class="punct-title">\u7B26\u53F7\u6309\u94AE\u8BBE\u7F6E</div></div>
-                <div class="punct-tabs">
-                    <button class="punct-tab active" data-view="add">\u65B0\u589E</button>
-                    <button class="punct-tab" data-view="edit">\u7F16\u8F91</button>
-                </div>
-                <div class="punct-panel" data-content></div>
-                ${l.modalHtml}
-            </div>
-        `), n = null, r = (e) => {
-			t.find("#custom-modal-msg").text(e.msg), n = e.onOk, t.find("#custom-modal-input").hide(), e.isAlert ? (t.find("#custom-modal-ok").css("background", "#222").text("我知道了"), t.find("#custom-modal-cancel").hide()) : (t.find("#custom-modal-ok").css("background", "#000").text("确定删除"), t.find("#custom-modal-cancel").show()), t.find("#custom-modal-layer").fadeIn(150);
-		};
-		t.find("#custom-modal-cancel").on("click", () => {
-			n = null, t.find("#custom-modal-layer").fadeOut(150);
-		}), t.find("#custom-modal-ok").on("click", () => {
-			n && n(), t.find("#custom-modal-layer").fadeOut(150);
-		});
-		let i = () => {
-			t.find("[data-content]").html("\n                <div class=\"punct-field\"><label>类型</label><select data-add-type><option value=\"single\">单独标点</option><option value=\"pair\">成对标点</option></select></div>\n                <div class=\"punct-field\"><label>按钮名称</label><input data-add-name placeholder=\"显示在按钮上\"></div>\n                <div style=\"display:grid; grid-template-columns:1fr 1fr; gap:12px;\">\n                    <div class=\"punct-field\"><label data-left-label>要插入的符号</label><input data-add-left></div>\n                    <div class=\"punct-field\" data-right-wrap style=\"display:none;\"><label>右侧符号</label><input data-add-right></div>\n                </div>\n                <div style=\"display:flex; justify-content:flex-end; margin-top:16px;\"><button class=\"punct-action\" data-save-add style=\"background:#000; color:#fff;\">保存</button></div>\n            "), t.find("[data-add-type]").on("change", function() {
-				let e = window.jQuery(this).val() === "pair";
-				t.find("[data-right-wrap]").toggle(e), t.find("[data-left-label]").text(e ? "左侧符号" : "要插入的符号");
-			}), t.find("[data-save-add]").on("click", () => {
-				let e = t.find("[data-add-type]").val(), n = String(t.find("[data-add-name]").val() || "").trim(), i = String(t.find("[data-add-left]").val() || ""), a = e === "pair" ? String(t.find("[data-add-right]").val() || "") : "";
-				if (!n || !i || e === "pair" && !a) return r({
-					msg: "请填完必填项。",
-					isAlert: !0
-				});
-				let o = l.loadCustomSymbols();
-				o.push({
-					name: n,
-					left: i,
-					right: a
-				}), l.saveCustomSymbols(o), l.forgetDeletedName(n), l.register(), t.find("[data-view=\"edit\"]").click();
-			});
-		}, a = () => {
-			let e = l.getVisibleSymbols(), n = new Set(l.defaultSymbols.map((e) => e.name)), i = e.length ? e.map((e) => {
-				let t = n.has(e.name);
-				return `<div class="cmd-row symbol-edit-row" data-name="${l.escapeHtml(e.name)}" draggable="true" style="align-items:center; padding:10px 14px;">
-                    <span class="drag-handle" title="\u62D6\u52A8\u6392\u5E8F">=</span>
-                    <input type="checkbox" data-pick>
-                    <div class="cmd-content"><div class="cmd-text" style="font-weight:600; font-size:14px; color:#111;">${l.escapeHtml(e.name)}</div></div>
-                    <button class="punct-action" data-edit-one ${t ? "style=\"opacity:.45;\" title=\"默认按钮只能删\"" : ""}>\u4FEE\u6539</button>
-                </div>`;
-			}).join("") : "<div style=\"text-align:center; padding:20px; color:#999;\">暂无可编辑按钮</div>";
-			t.find("[data-content]").html(`<div class="cmd-list-wrap">${i}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>\u5220\u9664\u9009\u4E2D</button></div>`);
-			let s = t.find(".cmd-list-wrap"), c = null, u = null, d = () => {
-				let e = s.find(".cmd-row").map(function() {
-					return window.jQuery(this).attr("data-name");
-				}).get();
-				l.saveSymbolOrder(e), l.register();
-			};
-			s.on("dragstart", ".cmd-row", function(e) {
-				c = this, window.jQuery(this).addClass("dragging"), e.originalEvent.dataTransfer.effectAllowed = "move", e.originalEvent.dataTransfer.setData("text/plain", window.jQuery(this).attr("data-name"));
-			}), s.on("dragover", ".cmd-row", function(e) {
-				e.preventDefault();
-				let t = window.jQuery(this);
-				if (!c || this === c) return;
-				let n = this.getBoundingClientRect();
-				e.originalEvent.clientY > n.top + n.height / 2 ? t.after(c) : t.before(c);
-			}), s.on("dragend", ".cmd-row", function() {
-				window.jQuery(this).removeClass("dragging"), c && d(), c = null;
-			}), s.on("pointerdown", ".drag-handle", function(e) {
-				let t = window.jQuery(this).closest(".cmd-row")[0];
-				if (t) {
-					c = t, u = e.originalEvent.pointerId;
-					try {
-						this.setPointerCapture?.(u);
-					} catch {}
-					window.jQuery(t).addClass("dragging reorder-active"), window.jQuery(document).one("pointerup pointercancel", () => {
-						c && (window.jQuery(c).removeClass("dragging reorder-active"), d(), c = null, u = null);
-					}), e.preventDefault();
-				}
-			}), s.on("pointermove", function(e) {
-				if (!c || u !== null && e.originalEvent.pointerId !== u) return;
-				let t = e.originalEvent, n = document.elementFromPoint(t.clientX, t.clientY)?.closest?.(".cmd-row");
-				if (!n || n === c || !window.jQuery.contains(s[0], n)) return;
-				let r = n.getBoundingClientRect();
-				t.clientY > r.top + r.height / 2 ? window.jQuery(n).after(c) : window.jQuery(n).before(c), e.preventDefault();
-			}), t.find("[data-edit-one]").on("click", function() {
-				let e = window.jQuery(this).closest(".cmd-row").attr("data-name");
-				if (n.has(e)) return r({
-					msg: "默认自带标点仅支持删除",
-					isAlert: !0
-				});
-				let t = l.loadCustomSymbols().find((t) => t.name === e);
-				t && o(t, e);
-			}), t.find("[data-delete-picked]").on("click", () => {
-				let e = t.find("[data-pick]:checked").map(function() {
-					return window.jQuery(this).closest(".cmd-row").attr("data-name");
-				}).get();
-				if (!e.length) return r({
-					msg: "请先勾选",
-					isAlert: !0
-				});
-				r({
-					msg: `\u786E\u5B9A\u8981\u5220\u9664\u9009\u4E2D\u7684 ${e.length} \u4E2A\u6807\u70B9\u6309\u94AE\u5417\uFF1F`,
-					onOk: () => {
-						l.deleteCustomByNames(e), a();
-					}
-				});
-			});
-		}, o = (e, n) => {
-			t.find("[data-content]").html(`
-                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-edit-name value="${l.escapeHtml(e.name)}"></div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div class="punct-field"><label>\u5DE6\u4FA7\u7B26\u53F7</label><input data-edit-left value="${l.escapeHtml(e.left)}"></div>
-                    <div class="punct-field"><label>\u53F3\u4FA7\u7B26\u53F7 (\u53EF\u7559\u7A7A)</label><input data-edit-right value="${l.escapeHtml(e.right || "")}"></div>
-                </div>
-                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
-                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">\u8FD4\u56DE</button>
-                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">\u4FDD\u5B58</button>
-                </div>
-            `), t.find("[data-back-edit]").on("click", a), t.find("[data-save-edit]").on("click", () => {
-				let e = String(t.find("[data-edit-name]").val() || "").trim(), i = String(t.find("[data-edit-left]").val() || ""), o = String(t.find("[data-edit-right]").val() || "");
-				if (!e || !i) return r({
-					msg: "必填项不能为空",
-					isAlert: !0
-				});
-				e !== n && (l.rememberDeletedName(n), l.hideButtonByName(n), l.forgetDeletedName(e));
-				let s = l.loadCustomSymbols(), c = s.findIndex((e) => e.name === n);
-				c !== -1 && (s[c] = {
-					name: e,
-					left: i,
-					right: o
-				}, l.saveCustomSymbols(s), l.register(), a());
-			});
-		};
-		t.find("[data-view]").on("click", function() {
-			t.find(".punct-tab").removeClass("active"), e(this).addClass("active"), e(this).data("view") === "add" ? i() : a();
-		}), i(), l.openPopup(t, {
-			okButton: "关闭",
-			forceCustom: !0
-		});
+		l.openCommandPanel("symbols");
 	},
 	bindButton: (e, t) => {
 		l.boundNames[e] || (window.eventOn(window.getButtonEvent(e), t), l.boundNames[e] = !0);
