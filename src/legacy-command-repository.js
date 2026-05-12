@@ -156,6 +156,30 @@ const PunctuationButtons = {
         const deleted = new Set(PunctuationButtons.loadDeletedNames());
         return PunctuationButtons.getAllSymbols().filter((item) => !deleted.has(item.name));
     },
+    loadDisabledScriptSymbolNames: () => {
+        PunctuationButtons.migrateLocalStorageOnce();
+        try {
+            const parsed = PunctuationButtons.getSettingsRoot().disabledScriptSymbolNames || [];
+            return Array.isArray(parsed) ? parsed.map(String) : [];
+        } catch (error) { return []; }
+    },
+    saveDisabledScriptSymbolNames: (items, shouldSave = true) => {
+        PunctuationButtons.getSettingsRoot().disabledScriptSymbolNames = [...new Set(items.map(String).filter(Boolean))];
+        if (shouldSave) PunctuationButtons.saveExtensionSettings();
+    },
+    isScriptSymbolEnabled: (name) => !PunctuationButtons.loadDisabledScriptSymbolNames().includes(String(name)),
+    setScriptSymbolEnabled: (name, enabled, shouldSave = true) => {
+        const target = String(name || '');
+        if (!target) return;
+        const disabled = new Set(PunctuationButtons.loadDisabledScriptSymbolNames());
+        if (enabled) disabled.delete(target);
+        else disabled.add(target);
+        PunctuationButtons.saveDisabledScriptSymbolNames([...disabled], shouldSave);
+    },
+    getScriptButtonSymbols: () => {
+        const disabled = new Set(PunctuationButtons.loadDisabledScriptSymbolNames());
+        return PunctuationButtons.getVisibleSymbols().filter((item) => !disabled.has(item.name));
+    },
 
     generateId: () => 'cmd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
     loadCommands: () => {
@@ -347,6 +371,7 @@ const PunctuationButtons = {
         const targetSet = new Set(targets);
         const current = PunctuationButtons.loadCustomSymbols();
         PunctuationButtons.saveCustomSymbols(current.filter((item) => !targetSet.has(item.name)));
+        PunctuationButtons.saveDisabledScriptSymbolNames(PunctuationButtons.loadDisabledScriptSymbolNames().filter((name) => !targetSet.has(name)), false);
         targets.forEach((name) => { PunctuationButtons.rememberDeletedName(name); PunctuationButtons.hideButtonByName(name); });
         PunctuationButtons.cleanupHelperButtonStorage(targets);
         if (typeof window !== 'undefined' && window.extension_settings) {
@@ -563,7 +588,7 @@ const PunctuationButtons = {
             if (!dragState) return;
             if (!dragState.dragging) {
                 launcher.classList.remove('open');
-                PunctuationButtons.openCommandPanel();
+                PunctuationButtons.openToolsPanel('commands');
             } else {
                 const rect = launcher.getBoundingClientRect();
                 PunctuationButtons.getSettingsRoot().floatingPosition = { left: rect.left, top: rect.top };
@@ -618,7 +643,7 @@ const PunctuationButtons = {
             if (settingsButton) {
                 event.preventDefault();
                 event.stopPropagation();
-                PunctuationButtons.openSettings();
+                PunctuationButtons.openToolsPanel('symbols');
                 return;
             }
             const button = event.target.closest('button[data-symbol-name]');
@@ -691,6 +716,10 @@ const PunctuationButtons = {
             .punct-tabs { display:flex; gap:6px; margin-bottom:16px; background:#f0f0f0; padding:5px; border:1.5px dashed #000; border-radius:0; flex-shrink: 0; }
             .punct-tab { flex:1; border:1.5px solid transparent; background:transparent; color:#555; border-radius:0; padding:10px 8px; cursor:pointer; font-weight:bold; transition:all 0.2s; text-align:center; font-size:14px; font-family:inherit; text-shadow:inherit; }
             .punct-tab.active { background:#fff; color:#000; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }
+            .tools-main-tabs { display:flex; gap:8px; margin-bottom:14px; }
+            .tools-main-tab { flex:1; justify-content:center; min-height:36px; }
+            .tools-section { display:none; }
+            .tools-section.active { display:block; }
             
             .punct-action { border:1.5px solid #000 !important; background:#fff; color:#000; border-radius:2px !important; padding:8px 14px; cursor:pointer; font-weight:700; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; gap:4px; box-shadow:1px 2px 5px #a7a7a7; font-family:inherit; text-shadow:inherit; }
             .punct-action:hover { background:#f0f0f0; transform:translateY(-1px); box-shadow:3px 3px 3px #80808075; }
@@ -729,6 +758,8 @@ const PunctuationButtons = {
             .drag-handle:active { cursor:grabbing; }
             .symbol-edit-row { touch-action:auto; }
             .symbol-edit-row.reorder-active { touch-action:none; }
+            .script-toggle { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; white-space:nowrap; }
+            .script-toggle input { width:18px; height:18px; margin:0; accent-color:#000; }
             @media (hover:none), (pointer:coarse) {
                 .drag-handle { width:42px; height:42px; font-size:18px; }
                 .symbol-edit-row { min-height:58px; padding:8px 10px !important; gap:10px; }
@@ -776,12 +807,22 @@ const PunctuationButtons = {
         </div>
     `,
 
-    openCommandPanel: () => {
+    openToolsPanel: (initialTab = 'commands') => {
+        if (!window.jQuery) {
+            window.toastr?.error('当前环境缺少 jQuery，无法打开工具面板。');
+            return;
+        }
+        PunctuationButtons.openCommandPanel({ embed: true, initialTab });
+    },
+
+    openCommandPanel: (options = {}) => {
         if (!window.jQuery) {
             window.toastr?.error('当前环境缺少 jQuery，无法打开指令面板。');
             return;
         }
         const $ = window.jQuery;
+        const embeddedTools = !!options.embed;
+        const initialToolsTab = options.initialTab === 'symbols' ? 'symbols' : 'commands';
 
         let state = {
             activeTab: Object.keys(DEFAULT_CMD_CATEGORIES)[0],
@@ -806,14 +847,22 @@ const PunctuationButtons = {
             <div class="punct-settings">
                 ${PunctuationButtons.baseCss()}
                 <div class="punct-head">
-                    <div class="punct-title">\u5E38\u7528\u6307\u4EE4\u5E93</div>
+                    <div class="punct-title">${embeddedTools ? '\u7334\u5B50\u7684\u5C0F\u5DE5\u5177' : '\u5E38\u7528\u6307\u4EE4\u5E93'}</div>
                     <div style="display:flex; gap:8px;">
                         <button class="punct-action" id="cmd-import-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="\u5408\u5E76\u5BFC\u5165JSON\u6587\u4EF6">\uD83D\uDCE5 \u5BFC\u5165</button>
                         <button class="punct-action" id="cmd-export-btn" style="padding:4px 10px; font-size:12px; min-height:28px;" title="\u5BFC\u51FA\u6240\u6709\u6570\u636E\u5907\u4EFD">\uD83D\uDCE4 \u5BFC\u51FA</button>
                         <input type="file" id="cmd-import-file" accept=".json" style="display:none;">
                     </div>
                 </div>
-                
+                ${embeddedTools ? `
+                <div class="tools-main-tabs">
+                    <button class="punct-action tools-main-tab ${initialToolsTab === 'commands' ? 'active' : ''}" type="button" data-tools-tab="commands">\u6307\u4EE4\u4ED3\u5E93</button>
+                    <button class="punct-action tools-main-tab ${initialToolsTab === 'symbols' ? 'active' : ''}" type="button" data-tools-tab="symbols">\u65B0\u589E\u6309\u94AE</button>
+                </div>
+                ` : ''}
+
+                <div class="tools-section tools-commands-section ${!embeddedTools || initialToolsTab === 'commands' ? 'active' : ''}">
+
                 <div class="punct-tabs" id="cmd-tabs-container">
                     ${Object.keys(DEFAULT_CMD_CATEGORIES).map(cat => `<button class="punct-tab ${state.activeTab === cat ? 'active' : ''}" data-cat="${cat}">${cat}</button>`).join('')}
                 </div>
@@ -868,6 +917,9 @@ const PunctuationButtons = {
                 </div>
 
                 <div class="cmd-list-wrap" id="cmd-list-container"></div>
+                </div>
+
+                ${embeddedTools ? `<div class="tools-section tools-symbols-section ${initialToolsTab === 'symbols' ? 'active' : ''}" id="tools-symbols-section"></div>` : ''}
                 ${PunctuationButtons.modalHtml}
             </div>
         `);
@@ -1413,11 +1465,205 @@ const PunctuationButtons = {
             });
         });
 
+        const showToolsTab = (tab) => {
+            if (!embeddedTools) return;
+            const nextTab = tab === 'symbols' ? 'symbols' : 'commands';
+            $wrap.find('[data-tools-tab]').removeClass('active');
+            $wrap.find(`[data-tools-tab="${nextTab}"]`).addClass('active');
+            $wrap.find('.tools-section').removeClass('active');
+            $wrap.find(nextTab === 'symbols' ? '.tools-symbols-section' : '.tools-commands-section').addClass('active');
+        };
+        if (embeddedTools) {
+            PunctuationButtons.mountSymbolSettings($wrap, showModal, '#tools-symbols-section');
+            $wrap.on('click', '[data-tools-tab]', function () {
+                showToolsTab(window.jQuery(this).attr('data-tools-tab'));
+            });
+            showToolsTab(initialToolsTab);
+        }
+
         renderUI();
         PunctuationButtons.openPopup($wrap, { okButton: '\u5173\u95ED', forceCustom: true });
     },
 
+    mountSymbolSettings: ($wrap, showModal, contentSelector) => {
+        const $ = window.jQuery;
+        const $host = $wrap.find(contentSelector);
+        if (!$host.length) return;
+        $host.html(`
+            <div class="punct-tabs">
+                <button class="punct-tab active" data-symbol-view="add">\u65B0\u589E</button>
+                <button class="punct-tab" data-symbol-view="edit">\u7F16\u8F91</button>
+            </div>
+            <div class="punct-panel" data-symbol-content></div>
+        `);
+
+        const renderAdd = () => {
+            $host.find('[data-symbol-content]').html(`
+                <div class="punct-field"><label>\u7C7B\u578B</label><select data-add-type><option value="single">\u5355\u72EC\u6807\u70B9</option><option value="pair">\u6210\u5BF9\u6807\u70B9</option></select></div>
+                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-add-name placeholder="\u663E\u793A\u5728\u6309\u94AE\u4E0A"></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="punct-field"><label data-left-label>\u8981\u63D2\u5165\u7684\u7B26\u53F7</label><input data-add-left></div>
+                    <div class="punct-field" data-right-wrap style="display:none;"><label>\u53F3\u4FA7\u7B26\u53F7</label><input data-add-right></div>
+                </div>
+                <label class="script-toggle" style="margin-top:4px;"><input type="checkbox" data-add-script-enabled checked>\u663E\u793A\u4E3A\u811A\u672C\u6309\u94AE</label>
+                <div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-save-add style="background:#000; color:#fff;">\u4FDD\u5B58</button></div>
+            `);
+            $host.find('[data-add-type]').on('change', function () {
+                const isPair = window.jQuery(this).val() === 'pair';
+                $host.find('[data-right-wrap]').toggle(isPair);
+                $host.find('[data-left-label]').text(isPair ? '\u5DE6\u4FA7\u7B26\u53F7' : '\u8981\u63D2\u5165\u7684\u7B26\u53F7');
+            });
+            $host.find('[data-save-add]').on('click', () => {
+                const type = $host.find('[data-add-type]').val(), name = String($host.find('[data-add-name]').val() || '').trim();
+                const left = String($host.find('[data-add-left]').val() || ''), right = type === 'pair' ? String($host.find('[data-add-right]').val() || '') : '';
+                const scriptEnabled = $host.find('[data-add-script-enabled]').prop('checked');
+                if (!name || !left || (type === 'pair' && !right)) return showModal({msg: '\u8BF7\u586B\u5B8C\u5FC5\u586B\u9879\u3002', isAlert:true});
+                const custom = PunctuationButtons.loadCustomSymbols(); custom.push({ name, left, right });
+                PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.forgetDeletedName(name);
+                PunctuationButtons.setScriptSymbolEnabled(name, scriptEnabled, false);
+                PunctuationButtons.saveExtensionSettings();
+                PunctuationButtons.register(); renderEdit();
+                $host.find('[data-symbol-view]').removeClass('active');
+                $host.find('[data-symbol-view="edit"]').addClass('active');
+            });
+        };
+
+        const renderEdit = () => {
+            const all = PunctuationButtons.getVisibleSymbols(), defaultNames = new Set(PunctuationButtons.defaultSymbols.map(item => item.name));
+            const disabled = new Set(PunctuationButtons.loadDisabledScriptSymbolNames());
+            const rows = all.length ? all.map((item) => {
+                const isDefault = defaultNames.has(item.name);
+                const checked = disabled.has(item.name) ? '' : 'checked';
+                return `<div class="cmd-row symbol-edit-row" data-name="${PunctuationButtons.escapeHtml(item.name)}" draggable="true" style="align-items:center; padding:10px 14px;">
+                    <span class="drag-handle" title="\u62D6\u52A8\u6392\u5E8F">=</span>
+                    <input type="checkbox" data-pick>
+                    <div class="cmd-content"><div class="cmd-text" style="font-weight:600; font-size:14px; color:#111;">${PunctuationButtons.escapeHtml(item.name)}</div></div>
+                    <label class="script-toggle"><input type="checkbox" data-script-toggle ${checked}>\u6309\u94AE</label>
+                    <button class="punct-action" data-edit-one ${isDefault ? 'style="opacity:.45;" title="\u9ED8\u8BA4\u6309\u94AE\u53EA\u80FD\u5220"' : ''}>\u4FEE\u6539</button>
+                </div>`;
+            }).join('') : `<div style="text-align:center; padding:20px; color:#999;">\u6682\u65E0\u53EF\u7F16\u8F91\u6309\u94AE</div>`;
+            $host.find('[data-symbol-content]').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>\u5220\u9664\u9009\u4E2D</button></div>`);
+            const $list = $host.find('.cmd-list-wrap');
+            let draggedRow = null;
+            let pointerDragId = null;
+            const saveCurrentOrder = () => {
+                const orderedNames = $list.find('.cmd-row').map(function () { return window.jQuery(this).attr('data-name'); }).get();
+                PunctuationButtons.saveSymbolOrder(orderedNames);
+                PunctuationButtons.register();
+            };
+            $list.on('dragstart', '.cmd-row', function (event) {
+                draggedRow = this;
+                window.jQuery(this).addClass('dragging');
+                event.originalEvent.dataTransfer.effectAllowed = 'move';
+                event.originalEvent.dataTransfer.setData('text/plain', window.jQuery(this).attr('data-name'));
+            });
+            $list.on('dragover', '.cmd-row', function (event) {
+                event.preventDefault();
+                const $target = window.jQuery(this);
+                if (!draggedRow || this === draggedRow) return;
+                const targetRect = this.getBoundingClientRect();
+                const insertAfter = event.originalEvent.clientY > targetRect.top + targetRect.height / 2;
+                if (insertAfter) $target.after(draggedRow);
+                else $target.before(draggedRow);
+            });
+            $list.on('dragend', '.cmd-row', function () {
+                window.jQuery(this).removeClass('dragging');
+                if (draggedRow) saveCurrentOrder();
+                draggedRow = null;
+            });
+            $list.on('pointerdown', '.drag-handle', function (event) {
+                const row = window.jQuery(this).closest('.cmd-row')[0];
+                if (!row) return;
+                draggedRow = row;
+                pointerDragId = event.originalEvent.pointerId;
+                try { this.setPointerCapture?.(pointerDragId); } catch (_) {}
+                window.jQuery(row).addClass('dragging reorder-active');
+                window.jQuery(document).one('pointerup pointercancel', () => {
+                    if (!draggedRow) return;
+                    window.jQuery(draggedRow).removeClass('dragging reorder-active');
+                    saveCurrentOrder();
+                    draggedRow = null;
+                    pointerDragId = null;
+                });
+                event.preventDefault();
+            });
+            $list.on('pointermove', function (event) {
+                if (!draggedRow) return;
+                if (pointerDragId !== null && event.originalEvent.pointerId !== pointerDragId) return;
+                const pointerEvent = event.originalEvent;
+                const elementAtPoint = document.elementFromPoint(pointerEvent.clientX, pointerEvent.clientY);
+                const row = elementAtPoint?.closest?.('.cmd-row');
+                if (!row || row === draggedRow || !window.jQuery.contains($list[0], row)) return;
+                const targetRect = row.getBoundingClientRect();
+                const insertAfter = pointerEvent.clientY > targetRect.top + targetRect.height / 2;
+                if (insertAfter) window.jQuery(row).after(draggedRow);
+                else window.jQuery(row).before(draggedRow);
+                event.preventDefault();
+            });
+            $host.find('[data-script-toggle]').on('change', function () {
+                const name = window.jQuery(this).closest('.cmd-row').attr('data-name');
+                PunctuationButtons.setScriptSymbolEnabled(name, window.jQuery(this).prop('checked'));
+                PunctuationButtons.register();
+            });
+            $host.find('[data-edit-one]').on('click', function () {
+                const name = window.jQuery(this).closest('.cmd-row').attr('data-name');
+                if (defaultNames.has(name)) return showModal({msg: '\u9ED8\u8BA4\u81EA\u5E26\u6807\u70B9\u4EC5\u652F\u6301\u5220\u9664', isAlert:true});
+                const item = PunctuationButtons.loadCustomSymbols().find(i => i.name === name);
+                if(item) renderEditForm(item, name);
+            });
+            $host.find('[data-delete-picked]').on('click', () => {
+                const picked = $host.find('[data-pick]:checked').map(function () { return window.jQuery(this).closest('.cmd-row').attr('data-name'); }).get();
+                if (!picked.length) return showModal({msg:'\u8BF7\u5148\u52FE\u9009', isAlert:true});
+                showModal({
+                    msg: `\u786E\u5B9A\u8981\u5220\u9664\u9009\u4E2D\u7684 ${picked.length} \u4E2A\u6807\u70B9\u6309\u94AE\u5417\uFF1F`,
+                    onOk: () => { PunctuationButtons.deleteCustomByNames(picked); renderEdit(); PunctuationButtons.register(); }
+                });
+            });
+        };
+
+        const renderEditForm = (item, oldName) => {
+            const enabled = PunctuationButtons.isScriptSymbolEnabled(oldName) ? 'checked' : '';
+            $host.find('[data-symbol-content]').html(`
+                <div class="punct-field"><label>\u6309\u94AE\u540D\u79F0</label><input data-edit-name value="${PunctuationButtons.escapeHtml(item.name)}"></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="punct-field"><label>\u5DE6\u4FA7\u7B26\u53F7</label><input data-edit-left value="${PunctuationButtons.escapeHtml(item.left)}"></div>
+                    <div class="punct-field"><label>\u53F3\u4FA7\u7B26\u53F7 (\u53EF\u7559\u7A7A)</label><input data-edit-right value="${PunctuationButtons.escapeHtml(item.right || '')}"></div>
+                </div>
+                <label class="script-toggle" style="margin-top:4px;"><input type="checkbox" data-edit-script-enabled ${enabled}>\u663E\u793A\u4E3A\u811A\u672C\u6309\u94AE</label>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">\u8FD4\u56DE</button>
+                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">\u4FDD\u5B58</button>
+                </div>
+            `);
+            $host.find('[data-back-edit]').on('click', renderEdit);
+            $host.find('[data-save-edit]').on('click', () => {
+                const name = String($host.find('[data-edit-name]').val() || '').trim(), left = String($host.find('[data-edit-left]').val() || ''), right = String($host.find('[data-edit-right]').val() || '');
+                const scriptEnabled = $host.find('[data-edit-script-enabled]').prop('checked');
+                if (!name || !left) return showModal({msg:'\u5FC5\u586B\u9879\u4E0D\u80FD\u4E3A\u7A7A', isAlert:true});
+                const oldEnabled = PunctuationButtons.isScriptSymbolEnabled(oldName);
+                if (name !== oldName) {
+                    PunctuationButtons.rememberDeletedName(oldName);
+                    PunctuationButtons.hideButtonByName(oldName);
+                    PunctuationButtons.forgetDeletedName(name);
+                    PunctuationButtons.setScriptSymbolEnabled(oldName, true, false);
+                    PunctuationButtons.setScriptSymbolEnabled(name, oldEnabled, false);
+                }
+                PunctuationButtons.setScriptSymbolEnabled(name, scriptEnabled, false);
+                const custom = PunctuationButtons.loadCustomSymbols(), idx = custom.findIndex(i => i.name === oldName);
+                if(idx !== -1) { custom[idx] = { name, left, right }; PunctuationButtons.saveCustomSymbols(custom); PunctuationButtons.saveExtensionSettings(); PunctuationButtons.register(); renderEdit(); }
+            });
+        };
+
+        $host.find('[data-symbol-view]').on('click', function () {
+            $host.find('[data-symbol-view]').removeClass('active');
+            window.jQuery(this).addClass('active');
+            window.jQuery(this).attr('data-symbol-view') === 'add' ? renderAdd() : renderEdit();
+        });
+        renderAdd();
+    },
+
     openSettings: () => {
+        return PunctuationButtons.openToolsPanel('symbols');
         if (!window.jQuery) {
             window.toastr?.error('当前环境缺少 jQuery，无法打开符号设置。');
             return;
@@ -1594,9 +1840,29 @@ const PunctuationButtons = {
         PunctuationButtons.boundNames[name] = true;
     },
 
+    registerScriptSymbolButtons: () => {
+        const symbols = PunctuationButtons.getScriptButtonSymbols();
+        const enabledNames = new Set(symbols.map((symbol) => symbol.name));
+        PunctuationButtons.getVisibleSymbols()
+            .filter((symbol) => !enabledNames.has(symbol.name))
+            .forEach((symbol) => PunctuationButtons.hideButtonByName(symbol.name));
+        const buttons = symbols.map((symbol) => ({ name: symbol.name, visible: true }));
+        buttons.push({ name: PUNCT_SETTINGS_BUTTON, visible: true }, { name: PUNCT_CMD_BUTTON, visible: true });
+
+        if (typeof window.appendInexistentScriptButtons === 'function') window.appendInexistentScriptButtons(buttons);
+        else if (typeof window.replaceScriptButtons === 'function') window.replaceScriptButtons(buttons);
+
+        if (typeof window.eventOn !== 'function' || typeof window.getButtonEvent !== 'function') return;
+        symbols.forEach((symbol) => PunctuationButtons.bindButton(symbol.name, () => PunctuationButtons.insertByName(symbol.name)));
+        PunctuationButtons.bindButton(PUNCT_SETTINGS_BUTTON, () => PunctuationButtons.openToolsPanel('symbols'));
+        PunctuationButtons.bindButton(PUNCT_CMD_BUTTON, () => PunctuationButtons.openToolsPanel('commands'));
+    },
+
     register: () => {
         PunctuationButtons.buildFloatingLauncher();
-        PunctuationButtons.buildInlineSymbolBar();
+        PunctuationButtons.stopInlineSymbolBarTracking();
+        document.getElementById('monkey-tools-inline-symbols')?.remove();
+        PunctuationButtons.registerScriptSymbolButtons();
     }
 };
 
