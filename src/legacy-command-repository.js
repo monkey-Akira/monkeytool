@@ -322,75 +322,32 @@ const PunctuationButtons = {
     // ===============================================
     // 🔥 【核心修复】重新排查并修复的复制逻辑
     // ===============================================
-    copyToClipboard: (text, showToast = true) => {
+    copyToClipboard: async (text, showToast = true) => {
         const value = String(text ?? '');
         const notifySuccess = () => {
             if (showToast && window.toastr) window.toastr.success('指令已复制');
         };
         const notifyManual = () => window.prompt('复制失败，请手动复制：', value);
-        // 同步后备复制方案：避免异步导致浏览器权限拦截
-        function fallbackCopy(str) {
-            let success = false;
-            const textArea = document.createElement("textarea");
-            textArea.value = str;
-            textArea.setAttribute('readonly', '');
-            
-            // 安全隐形处理：移出屏幕外，且不覆盖默认样式以保证可被选中
-            textArea.style.position = "fixed";
-            textArea.style.top = "-9999px";
-            textArea.style.left = "-9999px";
-            textArea.style.opacity = "0";
-            
-            document.body.appendChild(textArea);
-            
-            // 兼容 iOS 与常规浏览器的物理级选中
-            const isIOS = /ipad|iphone|ipod/i.test(navigator.userAgent)
-                || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const importModule = new Function('path', 'return import(path)');
+        const candidates = [
+            '../../../../utils.js',
+            '../../../utils.js',
+            '../../../scripts/utils.js',
+        ];
 
-            if (isIOS) {
-                const range = document.createRange();
-                const selection = window.getSelection();
-                range.selectNodeContents(textArea);
-                selection.removeAllRanges();
-                selection.addRange(range);
-                textArea.focus();
-                textArea.setSelectionRange(0, str.length);
-            } else {
-                textArea.focus({ preventScroll: true });
-                textArea.select();
-            }
-
+        for (const path of candidates) {
             try {
-                success = document.execCommand('copy');
-            } catch (error) {
-                success = false;
-            } finally {
-                document.body.removeChild(textArea);
-            }
-            return success;
-        }
-
-        // 1. 首选：趁用户点击事件未结束，立刻执行同步物理复制
-        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-            navigator.clipboard.writeText(value).then(() => {
+                const utils = await importModule(path);
+                if (typeof utils.copyText !== 'function') continue;
+                await utils.copyText(value);
                 notifySuccess();
-            }).catch(() => {
-                if (fallbackCopy(value)) {
-                    notifySuccess();
-                } else {
-                    notifyManual();
-                }
-            });
-            return;
+                return;
+            } catch (error) {
+                // Continue looking for SillyTavern's native copy helper.
+            }
         }
 
-        // 2. 备选：若老接口失效，尝试现代异步 API
-        if (fallbackCopy(value)) {
-            notifySuccess();
-                // 3. 终极保底：全部受限时强行弹窗要求用户手动复制，决不报假喜
-        } else {
-            notifyManual();
-        }
+        notifyManual();
     },
     // ===============================================
 

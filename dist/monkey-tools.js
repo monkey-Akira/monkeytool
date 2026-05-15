@@ -364,54 +364,25 @@ var PunctuationButtons = {
 		}));
 		PunctuationButtons.saveExtensionSettings();
 	},
-	copyToClipboard: (text, showToast = true) => {
+	copyToClipboard: async (text, showToast = true) => {
 		const value = String(text ?? "");
 		const notifySuccess = () => {
 			if (showToast && window.toastr) window.toastr.success("指令已复制");
 		};
 		const notifyManual = () => window.prompt("复制失败，请手动复制：", value);
-		function fallbackCopy(str) {
-			let success = false;
-			const textArea = document.createElement("textarea");
-			textArea.value = str;
-			textArea.setAttribute("readonly", "");
-			textArea.style.position = "fixed";
-			textArea.style.top = "-9999px";
-			textArea.style.left = "-9999px";
-			textArea.style.opacity = "0";
-			document.body.appendChild(textArea);
-			if (/ipad|iphone|ipod/i.test(navigator.userAgent) || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) {
-				const range = document.createRange();
-				const selection = window.getSelection();
-				range.selectNodeContents(textArea);
-				selection.removeAllRanges();
-				selection.addRange(range);
-				textArea.focus();
-				textArea.setSelectionRange(0, str.length);
-			} else {
-				textArea.focus({ preventScroll: true });
-				textArea.select();
-			}
-			try {
-				success = document.execCommand("copy");
-			} catch (error) {
-				success = false;
-			} finally {
-				document.body.removeChild(textArea);
-			}
-			return success;
-		}
-		if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-			navigator.clipboard.writeText(value).then(() => {
-				notifySuccess();
-			}).catch(() => {
-				if (fallbackCopy(value)) notifySuccess();
-				else notifyManual();
-			});
+		const importModule = new Function("path", "return import(path)");
+		for (const path of [
+			"../../../../utils.js",
+			"../../../utils.js",
+			"../../../scripts/utils.js"
+		]) try {
+			const utils = await importModule(path);
+			if (typeof utils.copyText !== "function") continue;
+			await utils.copyText(value);
+			notifySuccess();
 			return;
-		}
-		if (fallbackCopy(value)) notifySuccess();
-		else notifyManual();
+		} catch (error) {}
+		notifyManual();
 	},
 	hideButtonByName: (name) => {
 		PunctuationButtons.getDocuments().forEach((doc) => {
