@@ -961,6 +961,7 @@ var PunctuationButtons = {
             .preset-setup-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto; gap:10px; align-items:end; }
             .preset-source-row { display:grid; grid-template-columns:180px minmax(0,1fr); gap:10px; align-items:end; }
             .preset-setup .preset-field { display:flex; flex-direction:column; gap:6px; }
+            .preset-field label { font-size:12px; font-weight:800; color:#344054; }
             .preset-setup select, .preset-setup input, .preset-setup button, .preset-step select, .preset-step input, .preset-step button { max-width:100%; min-width:0; }
             .preset-setup select, .preset-setup input, .preset-setup button { height:38px; }
             .preset-category-strip { display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:8px; border:1px dashed #d0d7de; border-radius:10px; background:#fff; min-height:38px; }
@@ -979,7 +980,7 @@ var PunctuationButtons = {
             .preset-column-title h4 { margin:0; font-size:14px; font-weight:800; }
             .preset-column-tools { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:6px; }
             .preset-column-tools.target-tools { grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto; }
-            .preset-column-tools select, .preset-column-tools input, .preset-column-tools button { height:34px; padding:6px 8px; font-size:12px; }
+            .preset-column-tools select, .preset-column-tools input, .preset-column-tools button { width:100%; min-width:0; height:34px; padding:6px 8px; font-size:12px; }
             .preset-list { min-height:360px; max-height:54vh; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px; background:#fbfcfe; }
             .preset-slot { border:1px dashed #2da44e; border-radius:8px; background:#f0fff4; color:#1a7f37; padding:8px; text-align:center; font-size:12px; font-weight:800; cursor:pointer; }
             .preset-item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:start; border:1px solid #d8dee4; border-radius:10px; background:#fff; padding:9px; }
@@ -1025,13 +1026,18 @@ var PunctuationButtons = {
                 .preset-insert-hint { flex-basis:100%; text-align:center; }
             }
             @media (max-width: 620px) {
+                .punct-settings { padding:10px; min-width:0; }
+                .preset-shell { gap:10px; }
+                .preset-step, .preset-column { border-radius:10px; }
                 .preset-step-head { align-items:flex-start; flex-direction:column; }
                 .preset-step-body { padding:10px; }
                 .preset-setup-row, .preset-source-row { gap:8px; }
+                .preset-setup select, .preset-setup input, .preset-setup button, .preset-step select, .preset-step input, .preset-step button { width:100%; }
                 .preset-toggle-group { flex-direction:column; align-items:stretch; }
                 .preset-toggle { justify-content:flex-start; }
                 .preset-column-title, .preset-toolbar { flex-direction:column; align-items:stretch; }
-                .preset-column-tools, .preset-column-tools.target-tools { grid-template-columns:1fr 1fr; }
+                .preset-column-tools, .preset-column-tools.target-tools { grid-template-columns:1fr; }
+                .preset-column-tools button, .preset-insert-bar button { min-height:34px; padding:6px 8px; white-space:normal; line-height:1.25; }
                 .preset-list { min-height:280px; max-height:none; }
                 .preset-insert-bar button { flex-basis:100%; }
                 .preset-item { grid-template-columns:1fr; }
@@ -1701,9 +1707,9 @@ var PunctuationButtons = {
 			$wrap.find("#preset-target-mode").val(presetState.targetMode);
 			$wrap.find("#preset-source-title").text(presetState.sourceKind === "commands" ? `选择要插入的指令：${presetState.sourceCategory}` : `源预设: ${presetState.sourcePreset || "未选择"}`);
 			$wrap.find("#preset-target-title").text(`目标预设: ${presetState.targetPreset || "未选择"}`);
-			$wrap.find("#preset-source-preset-field").toggle(presetState.sourceKind === "preset");
-			$wrap.find("#preset-command-category-field").toggle(presetState.sourceKind === "commands");
-			$wrap.find("#preset-command-category-strip-field").toggle(presetState.sourceKind === "commands");
+			$wrap.find("#preset-source-preset-field").toggleClass("preset-hidden", presetState.sourceKind !== "preset");
+			$wrap.find("#preset-command-category-field").toggleClass("preset-hidden", presetState.sourceKind !== "commands");
+			$wrap.find("#preset-command-category-strip-field").toggleClass("preset-hidden", presetState.sourceKind !== "commands");
 			renderPresetSourceList();
 			renderPresetTargetList();
 			$wrap.toggleClass("preset-wide", true);
