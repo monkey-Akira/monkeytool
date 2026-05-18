@@ -865,7 +865,7 @@ var PunctuationButtons = {
             .punct-title { font-size:18px; font-weight:800; letter-spacing:0; background:#fff; border:1.5px solid #000; border-left:2px solid #000; border-radius:14px; outline:none; padding:10px 18px; }
             
             .punct-tabs { display:flex; gap:6px; margin-bottom:16px; background:#f0f0f0; padding:5px; border:1.5px dashed #000; border-radius:16px; flex-shrink: 0; }
-            .punct-tab { flex:1; border:1.5px solid #000; background:#fff; color:#000; border-radius:12px; padding:10px 8px; cursor:pointer; font-weight:bold; transition:all 0.2s; text-align:center; font-size:14px; font-family:inherit; text-shadow:none; }
+            .punct-tab { flex:1; border:1.5px solid transparent; background:transparent; color:#555; border-radius:12px; padding:10px 8px; cursor:pointer; font-weight:bold; transition:all 0.2s; text-align:center; font-size:14px; font-family:inherit; text-shadow:none; }
             .punct-tab.active { background:#fff; color:#000; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }
             
             .punct-action { border:1.5px solid #000 !important; background:#fff; color:#000; border-radius:14px !important; padding:8px 14px; cursor:pointer; font-weight:700; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; gap:4px; box-shadow:1px 2px 5px #a7a7a7; font-family:inherit; text-shadow:none; }
@@ -966,7 +966,7 @@ var PunctuationButtons = {
             .preset-setup select, .preset-setup input, .preset-setup button, .preset-step select, .preset-step input, .preset-step button { max-width:100%; min-width:0; }
             .preset-setup select, .preset-setup input, .preset-setup button { height:38px; }
             .preset-category-strip { display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:8px; border:1px dashed #d0d7de; border-radius:10px; background:#fff; min-height:38px; }
-            .preset-category-strip button { min-height:28px; padding:4px 9px; border-radius:999px; font-size:12px; box-shadow:none; }
+            .preset-category-strip button { min-height:28px; padding:4px 9px; border-radius:999px; font-size:12px; box-shadow:none; background:#f0f0f0; color:#555; border:1.5px dashed #000; }
             .preset-category-strip button.active { background:#fff; color:#000; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }
             .preset-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
             .preset-toggle-group { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
@@ -1012,13 +1012,13 @@ var PunctuationButtons = {
             .preset-quick-row { display:flex; gap:6px; flex-wrap:wrap; padding:8px; border:1px solid #d0d7de; border-radius:8px; background:#f8fafc; }
             .preset-quick-row button { border-radius:999px; min-height:28px; padding:4px 8px; font-size:12px; box-shadow:none; }
             .preset-form-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
-            .preset-dialog-mask { position:absolute; inset:0; display:none; place-items:center; padding:18px; background:rgba(15, 23, 42, .42); z-index:10005; border-radius:20px; }
+            .preset-dialog-mask { position:absolute; left:0; right:0; top:0; height:100%; display:none; place-items:center; padding:18px; background:rgba(15, 23, 42, .42); z-index:10005; border-radius:20px; }
             .preset-dialog-mask.open { display:grid; }
-            .preset-dialog { width:min(620px, calc(100% - 24px)); max-height:min(90vh, calc(100% - 24px)); overflow:auto; border-radius:14px; background:#fff; box-shadow:0 24px 70px rgba(15, 23, 42, .32); }
+            .preset-dialog { width:min(620px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; border-radius:14px; background:#fff; box-shadow:0 24px 70px rgba(15, 23, 42, .32); text-align:left; }
             .preset-dialog-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid #d0d7de; }
             .preset-dialog-head h3 { margin:0; font-size:17px; }
-            .preset-dialog-body { padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
-            .preset-detail-content { max-height:55vh; overflow:auto; white-space:pre-wrap; word-break:break-word; border:1px dashed #d0d7de; border-radius:10px; background:#fbfcfd; padding:12px; color:#24292f; font-size:13px; line-height:1.55; }
+            .preset-dialog-body { padding:14px 16px; display:flex; flex-direction:column; gap:10px; text-align:left; }
+            .preset-detail-content { max-height:55vh; overflow:auto; white-space:pre-wrap; word-break:break-word; border:1px dashed #d0d7de; border-radius:10px; background:#fbfcfd; padding:12px; color:#24292f; font-size:13px; line-height:1.55; text-align:left; }
             .preset-wide { max-width:min(1040px, 96vw); }
             .preset-hidden { display:none !important; }
             .preset-empty { padding:32px 14px; text-align:center; color:#667085; border:1px dashed #d0d7de; border-radius:10px; background:#fff; }
@@ -2053,7 +2053,11 @@ var PunctuationButtons = {
 			$wrap.find("#preset-edit-order").val(prompt.injection_order ?? 100);
 			$wrap.find("#preset-edit-triggers").val(Array.isArray(prompt.injection_trigger) ? prompt.injection_trigger.join(", ") : "");
 			$wrap.find("#preset-edit-content").val(prompt.content || "");
-			$wrap.find("#preset-edit-layer").addClass("open");
+			const viewportHeight = $wrap.innerHeight() || 600;
+			$wrap.find("#preset-edit-layer").css({
+				top: `${$wrap.scrollTop()}px`,
+				height: `${viewportHeight}px`
+			}).addClass("open");
 		};
 		const openSourceDetailDialog = (entryId) => {
 			const entry = getSourceEntries().find((item, index) => (item.identifier || item.commandId || `source-${index}`) === entryId);
@@ -2068,7 +2072,11 @@ var PunctuationButtons = {
 			$wrap.find("#preset-detail-title").text(entry.name || "未命名");
 			$wrap.find("#preset-detail-meta").html(meta.map((item) => `<span class="preset-tag">${PunctuationButtons.escapeHtml(item)}</span>`).join(""));
 			$wrap.find("#preset-detail-content").text(entry.content || "");
-			$wrap.find("#preset-detail-layer").addClass("open");
+			const viewportHeight = $wrap.innerHeight() || 600;
+			$wrap.find("#preset-detail-layer").css({
+				top: `${$wrap.scrollTop()}px`,
+				height: `${viewportHeight}px`
+			}).addClass("open");
 		};
 		const insertSelectedSourceEntries = async () => {
 			const ids = new Set(presetState.sourceSelection);
