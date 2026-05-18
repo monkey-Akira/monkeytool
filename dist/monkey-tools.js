@@ -953,9 +953,14 @@ var PunctuationButtons = {
             .cmd-quick-btn:active { transform:scale(0.95); }
 
             .preset-shell { display:flex; flex-direction:column; gap:12px; }
-            .preset-setup { display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:end; }
+            .preset-setup { display:flex; flex-direction:column; gap:10px; border:1px solid #d0d7de; border-radius:12px; padding:12px; background:#fbfcfe; }
+            .preset-setup-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto; gap:10px; align-items:end; }
+            .preset-source-row { display:grid; grid-template-columns:180px minmax(0,1fr); gap:10px; align-items:end; }
             .preset-setup .preset-field { display:flex; flex-direction:column; gap:6px; }
             .preset-setup select, .preset-setup input, .preset-setup button { height:38px; }
+            .preset-category-strip { display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:8px; border:1px dashed #d0d7de; border-radius:10px; background:#fff; min-height:38px; }
+            .preset-category-strip button { min-height:28px; padding:4px 9px; border-radius:999px; font-size:12px; box-shadow:none; }
+            .preset-category-strip button.active { background:#000; color:#fff; border-color:#000; }
             .preset-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
             .preset-toggle-group { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
             .preset-toggle { display:inline-flex; gap:6px; align-items:center; font-size:12px; font-weight:700; }
@@ -1008,7 +1013,7 @@ var PunctuationButtons = {
             .preset-badge.warn { background:#fff0c2; color:#8a6100; border-color:#f2c94c; }
 
             @media (max-width: 920px) {
-                .preset-setup, .preset-workbench, .preset-editor, .preset-form-grid { grid-template-columns:1fr; }
+                .preset-setup-row, .preset-source-row, .preset-workbench, .preset-editor, .preset-form-grid { grid-template-columns:1fr; }
                 .preset-actions { position:static; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
                 .preset-actions .preset-note { grid-column:1 / -1; }
             }
@@ -1021,7 +1026,7 @@ var PunctuationButtons = {
                 .preset-item input[type="checkbox"] { margin:0; }
                 .preset-item-actions { flex-direction:row; justify-content:flex-end; }
                 .preset-item-actions .icon-btn { width:auto; min-width:36px; }
-                .preset-setup { grid-template-columns:1fr; }
+                .preset-category-strip { max-height:150px; overflow:auto; }
             }
         </style>
     `,
@@ -1167,26 +1172,34 @@ var PunctuationButtons = {
                 <div data-main-panel="presets" style="display:none;">
                     <div class="preset-shell">
                         <div class="preset-setup">
-                            <div class="preset-field">
-                                <label>左侧来源</label>
-                                <select id="preset-source-kind">
-                                    <option value="preset">源预设</option>
-                                    <option value="commands">指令仓库</option>
-                                </select>
+                            <div class="preset-setup-row">
+                                <div class="preset-field">
+                                    <label>左侧来源</label>
+                                    <select id="preset-source-kind">
+                                        <option value="preset">源预设</option>
+                                        <option value="commands">指令仓库</option>
+                                    </select>
+                                </div>
+                                <div class="preset-field">
+                                    <label>目标预设</label>
+                                    <select id="preset-target-preset"><option value="">请选择目标预设</option></select>
+                                </div>
+                                <button class="punct-action" id="preset-load-btn" style="height:38px; background:#000; color:#fff;">读取</button>
                             </div>
-                            <div class="preset-field" id="preset-source-preset-field">
-                                <label>源预设</label>
-                                <select id="preset-source-preset"><option value="">请选择源预设</option></select>
+                            <div class="preset-source-row">
+                                <div class="preset-field" id="preset-source-preset-field">
+                                    <label>源预设</label>
+                                    <select id="preset-source-preset"><option value="">请选择源预设</option></select>
+                                </div>
+                                <div class="preset-field preset-hidden" id="preset-command-category-field">
+                                    <label>指令分类</label>
+                                    <select id="preset-command-category"></select>
+                                </div>
+                                <div class="preset-field preset-hidden" id="preset-command-category-strip-field">
+                                    <label>分类快捷选择</label>
+                                    <div class="preset-category-strip" id="preset-command-category-strip"></div>
+                                </div>
                             </div>
-                            <div class="preset-field preset-hidden" id="preset-command-category-field">
-                                <label>指令分类</label>
-                                <select id="preset-command-category"></select>
-                            </div>
-                            <div class="preset-field">
-                                <label>目标预设</label>
-                                <select id="preset-target-preset"><option value="">请选择目标预设</option></select>
-                            </div>
-                            <button class="punct-action" id="preset-load-btn" style="height:38px; background:#000; color:#fff;">读取</button>
                         </div>
 
                         <div class="preset-toolbar">
@@ -1570,6 +1583,10 @@ var PunctuationButtons = {
 			normalizePresetSourceCategory();
 			return getAvailableCommandCategories().map((category) => `<option value="${PunctuationButtons.escapeHtml(category)}" ${presetState.sourceCategory === category ? "selected" : ""}>${PunctuationButtons.escapeHtml(category)}</option>`).join("");
 		};
+		const commandCategoryButtons = () => {
+			normalizePresetSourceCategory();
+			return getAvailableCommandCategories().map((category) => `<button type="button" class="${presetState.sourceCategory === category ? "active" : ""}" data-preset-category="${PunctuationButtons.escapeHtml(category)}">${PunctuationButtons.escapeHtml(category)}</button>`).join("");
+		};
 		const fillPresetSelectors = () => {
 			const names = getPresetNames();
 			const selectedSource = presetState.sourcePreset;
@@ -1577,6 +1594,7 @@ var PunctuationButtons = {
 			$wrap.find("#preset-source-preset").html(`<option value="">请选择源预设</option>${names.map((name) => `<option value="${PunctuationButtons.escapeHtml(name)}" ${selectedSource === name ? "selected" : ""}>${PunctuationButtons.escapeHtml(name)}</option>`).join("")}`);
 			$wrap.find("#preset-target-preset").html(`<option value="">请选择目标预设</option>${names.map((name) => `<option value="${PunctuationButtons.escapeHtml(name)}" ${selectedTarget === name ? "selected" : ""}>${PunctuationButtons.escapeHtml(name)}</option>`).join("")}`);
 			$wrap.find("#preset-command-category").html(commandCategoryOptions());
+			$wrap.find("#preset-command-category-strip").html(commandCategoryButtons());
 		};
 		const renderPresetSourceList = () => {
 			const entries = getSourceEntries();
@@ -1654,6 +1672,7 @@ var PunctuationButtons = {
 			$wrap.find("#preset-target-title").text(`目标预设: ${presetState.targetPreset || "未选择"}`);
 			$wrap.find("#preset-source-preset-field").toggle(presetState.sourceKind === "preset");
 			$wrap.find("#preset-command-category-field").toggle(presetState.sourceKind === "commands");
+			$wrap.find("#preset-command-category-strip-field").toggle(presetState.sourceKind === "commands");
 			renderPresetSourceList();
 			renderPresetTargetList();
 			$wrap.toggleClass("preset-wide", true);
@@ -2380,6 +2399,11 @@ var PunctuationButtons = {
 		});
 		$wrap.on("change", "#preset-command-category", function() {
 			presetState.sourceCategory = String($(this).val() || Object.keys(DEFAULT_CMD_CATEGORIES)[0]);
+			presetState.sourceSelection.clear();
+			renderPresetPanel();
+		});
+		$wrap.on("click", "[data-preset-category]", function() {
+			presetState.sourceCategory = String($(this).attr("data-preset-category") || Object.keys(DEFAULT_CMD_CATEGORIES)[0]);
 			presetState.sourceSelection.clear();
 			renderPresetPanel();
 		});
