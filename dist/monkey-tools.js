@@ -959,6 +959,7 @@ var PunctuationButtons = {
             .preset-step-body { padding:12px; display:flex; flex-direction:column; gap:10px; }
             .preset-setup { display:flex; flex-direction:column; gap:10px; }
             .preset-setup-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto; gap:10px; align-items:end; }
+            .preset-target-setup-row { grid-template-columns:minmax(120px,.8fr) minmax(0,1.2fr) auto auto; }
             .preset-source-row { display:grid; grid-template-columns:180px minmax(0,1fr); gap:10px; align-items:end; }
             .preset-setup .preset-field { display:flex; flex-direction:column; gap:6px; }
             .preset-field label { font-size:12px; font-weight:800; color:#344054; }
@@ -1217,7 +1218,14 @@ var PunctuationButtons = {
                                     <h4>2. 选择目标</h4>
                                 </div>
                                 <div class="preset-step-body">
-                                    <div class="preset-setup-row">
+                                    <div class="preset-setup-row preset-target-setup-row">
+                                        <div class="preset-field">
+                                            <label>目标类型</label>
+                                            <select id="preset-target-kind">
+                                                <option value="preset">目标预设</option>
+                                                <option value="commands">指令仓库</option>
+                                            </select>
+                                        </div>
                                         <div class="preset-field">
                                             <label>目标预设</label>
                                             <select id="preset-target-preset"><option value="">请选择目标预设</option></select>
@@ -1287,6 +1295,14 @@ var PunctuationButtons = {
                                         </select>
                                         <button class="punct-action" id="preset-target-all">全选</button>
                                         <button class="punct-action" id="preset-delete-target" style="color:#000;">批量删除</button>
+                                    </div>
+                                    <div class="preset-field preset-hidden" id="preset-target-command-category-field">
+                                        <label>目标指令分类</label>
+                                        <select id="preset-target-command-category"></select>
+                                    </div>
+                                    <div class="preset-field preset-hidden" id="preset-target-command-category-strip-field">
+                                        <label>分类快捷选择</label>
+                                        <div class="preset-category-strip" id="preset-target-command-category-strip"></div>
                                     </div>
                                 </div>
                                 <div class="preset-list" id="preset-target-list"></div>
@@ -1444,9 +1460,11 @@ var PunctuationButtons = {
 		};
 		const presetState = {
 			sourceKind: "preset",
+			targetKind: "preset",
 			sourcePreset: "",
 			targetPreset: "",
 			sourceCategory: Object.keys(DEFAULT_CMD_CATEGORIES)[0],
+			targetCategory: Object.keys(DEFAULT_CMD_CATEGORIES)[0],
 			sourceSearch: "",
 			targetSearch: "",
 			targetMode: "inserted",
@@ -1571,6 +1589,11 @@ var PunctuationButtons = {
 			if (!categories.includes(presetState.sourceCategory)) presetState.sourceCategory = categories[0] || Object.keys(DEFAULT_CMD_CATEGORIES)[0];
 			return presetState.sourceCategory;
 		};
+		const normalizePresetTargetCategory = () => {
+			const categories = getAvailableCommandCategories();
+			if (!categories.includes(presetState.targetCategory)) presetState.targetCategory = categories[0] || Object.keys(DEFAULT_CMD_CATEGORIES)[0];
+			return presetState.targetCategory;
+		};
 		const getSourceEntries = () => {
 			if (presetState.sourceKind === "commands") {
 				const selectedCategory = normalizePresetSourceCategory();
@@ -1601,6 +1624,27 @@ var PunctuationButtons = {
 			});
 		};
 		const getTargetEntries = () => {
+			if (presetState.targetKind === "commands") {
+				const selectedCategory = normalizePresetTargetCategory();
+				return PunctuationButtons.loadCommands().filter((command) => String(command.category || "") === selectedCategory).map((command) => ({
+					sourceType: "command",
+					commandId: command.id,
+					identifier: command.id,
+					name: command.title || command.text?.slice(0, 12) || "指令内容",
+					content: command.text || "",
+					role: "指令仓库",
+					tags: Array.isArray(command.tags) ? command.tags : []
+				})).filter((entry) => {
+					const query = presetState.targetSearch.trim().toLowerCase();
+					if (!query) return true;
+					return [
+						entry.name,
+						entry.content,
+						entry.role,
+						...entry.tags || []
+					].map((value) => String(value ?? "")).join(" ").toLowerCase().includes(query);
+				});
+			}
 			if (!presetState.targetPreset) return [];
 			return getPromptEntriesFromPreset(getPresetDataByName(presetState.targetPreset), presetState.targetMode).filter((entry) => {
 				const query = presetState.targetSearch.trim().toLowerCase();
@@ -1618,9 +1662,17 @@ var PunctuationButtons = {
 			normalizePresetSourceCategory();
 			return getAvailableCommandCategories().map((category) => `<option value="${PunctuationButtons.escapeHtml(category)}" ${presetState.sourceCategory === category ? "selected" : ""}>${PunctuationButtons.escapeHtml(category)}</option>`).join("");
 		};
+		const targetCommandCategoryOptions = () => {
+			normalizePresetTargetCategory();
+			return getAvailableCommandCategories().map((category) => `<option value="${PunctuationButtons.escapeHtml(category)}" ${presetState.targetCategory === category ? "selected" : ""}>${PunctuationButtons.escapeHtml(category)}</option>`).join("");
+		};
 		const commandCategoryButtons = () => {
 			normalizePresetSourceCategory();
 			return getAvailableCommandCategories().map((category) => `<button type="button" class="${presetState.sourceCategory === category ? "active" : ""}" data-preset-category="${PunctuationButtons.escapeHtml(category)}">${PunctuationButtons.escapeHtml(category)}</button>`).join("");
+		};
+		const targetCommandCategoryButtons = () => {
+			normalizePresetTargetCategory();
+			return getAvailableCommandCategories().map((category) => `<button type="button" class="${presetState.targetCategory === category ? "active" : ""}" data-preset-target-category="${PunctuationButtons.escapeHtml(category)}">${PunctuationButtons.escapeHtml(category)}</button>`).join("");
 		};
 		const fillPresetSelectors = () => {
 			const names = getPresetNames();
@@ -1630,6 +1682,8 @@ var PunctuationButtons = {
 			$wrap.find("#preset-target-preset").html(`<option value="">请选择目标预设</option>${names.map((name) => `<option value="${PunctuationButtons.escapeHtml(name)}" ${selectedTarget === name ? "selected" : ""}>${PunctuationButtons.escapeHtml(name)}</option>`).join("")}`);
 			$wrap.find("#preset-command-category").html(commandCategoryOptions());
 			$wrap.find("#preset-command-category-strip").html(commandCategoryButtons());
+			$wrap.find("#preset-target-command-category").html(targetCommandCategoryOptions());
+			$wrap.find("#preset-target-command-category-strip").html(targetCommandCategoryButtons());
 		};
 		const renderPresetSourceList = () => {
 			const entries = getSourceEntries();
@@ -1666,6 +1720,29 @@ var PunctuationButtons = {
 			const entries = getTargetEntries();
 			presetState.targetEntries = entries;
 			$wrap.find("#preset-target-count").text(`${entries.length} 条`);
+			if (presetState.targetKind === "commands") {
+				if (!entries.length) {
+					$wrap.find("#preset-target-list").html(`<div class="preset-empty">当前目标分类「${PunctuationButtons.escapeHtml(presetState.targetCategory)}」还没有指令</div>`);
+					return;
+				}
+				const html = entries.map((entry, index) => {
+					const id = entry.identifier || entry.commandId || `target-${index}`;
+					const checked = presetState.targetSelection.has(id) ? "checked" : "";
+					const tagHtml = (entry.tags || []).slice(0, 4).map((tag) => `<span class="preset-tag">${PunctuationButtons.escapeHtml(tag)}</span>`).join("");
+					return `
+                        <article class="preset-item" data-id="${PunctuationButtons.escapeHtml(id)}">
+                            <input type="checkbox" data-target-check="${PunctuationButtons.escapeHtml(id)}" ${checked}>
+                            <div class="preset-item-main">
+                                <div class="preset-item-name">${PunctuationButtons.escapeHtml(entry.name || "未命名")}</div>
+                                <div class="preset-tags"><span class="preset-tag">指令仓库</span>${tagHtml}</div>
+                                <div class="preset-item-text">${PunctuationButtons.escapeHtml(entry.content || "")}</div>
+                            </div>
+                        </article>
+                    `;
+				}).join("");
+				$wrap.find("#preset-target-list").html(html);
+				return;
+			}
 			if (!presetState.targetPreset) {
 				$wrap.find("#preset-target-list").html("<div class=\"preset-empty\">请选择目标预设</div>");
 				return;
@@ -1702,14 +1779,19 @@ var PunctuationButtons = {
 		const renderPresetPanel = () => {
 			fillPresetSelectors();
 			$wrap.find("#preset-source-kind").val(presetState.sourceKind);
+			$wrap.find("#preset-target-kind").val(presetState.targetKind);
 			$wrap.find("#preset-source-search").val(presetState.sourceSearch);
 			$wrap.find("#preset-target-search").val(presetState.targetSearch);
 			$wrap.find("#preset-target-mode").val(presetState.targetMode);
 			$wrap.find("#preset-source-title").text(presetState.sourceKind === "commands" ? `选择要插入的指令：${presetState.sourceCategory}` : `源预设: ${presetState.sourcePreset || "未选择"}`);
-			$wrap.find("#preset-target-title").text(`目标预设: ${presetState.targetPreset || "未选择"}`);
+			$wrap.find("#preset-target-title").text(presetState.targetKind === "commands" ? `目标指令仓库: ${presetState.targetCategory}` : `目标预设: ${presetState.targetPreset || "未选择"}`);
 			$wrap.find("#preset-source-preset-field").toggleClass("preset-hidden", presetState.sourceKind !== "preset");
 			$wrap.find("#preset-command-category-field").toggleClass("preset-hidden", presetState.sourceKind !== "commands");
 			$wrap.find("#preset-command-category-strip-field").toggleClass("preset-hidden", presetState.sourceKind !== "commands");
+			$wrap.find("#preset-target-preset").closest(".preset-field").toggleClass("preset-hidden", presetState.targetKind !== "preset");
+			$wrap.find("#preset-current-target, #preset-target-mode, #preset-delete-target, #preset-place-uninserted").toggleClass("preset-hidden", presetState.targetKind !== "preset");
+			$wrap.find("#preset-target-command-category-field").toggleClass("preset-hidden", presetState.targetKind !== "commands");
+			$wrap.find("#preset-target-command-category-strip-field").toggleClass("preset-hidden", presetState.targetKind !== "commands");
 			renderPresetSourceList();
 			renderPresetTargetList();
 			$wrap.toggleClass("preset-wide", true);
@@ -1755,6 +1837,34 @@ var PunctuationButtons = {
 			delete copy.isUninserted;
 			return copy;
 		};
+		const buildCommandFromPresetEntry = (entry, targetCategory) => {
+			const title = String(entry?.name || entry?.title || entry?.content?.slice(0, 10) || "预设条目").trim();
+			const text = String(entry?.content || entry?.text || "").trim();
+			return {
+				id: PunctuationButtons.generateId(),
+				category: targetCategory,
+				title: title || text.slice(0, 10) || "预设条目",
+				text,
+				isFavorite: false,
+				tags: Array.isArray(entry?.tags) ? [...entry.tags] : [],
+				timestamp: Date.now()
+			};
+		};
+		const insertEntriesToCommandRepository = async (sourceEntries) => {
+			const targetCategory = normalizePresetTargetCategory();
+			const entries = sourceEntries.map((entry) => buildCommandFromPresetEntry(entry, targetCategory)).filter((command) => command.text);
+			if (!entries.length) return showModal({
+				msg: "没有可写入指令仓库的内容。",
+				isAlert: true
+			});
+			const commands = PunctuationButtons.loadCommands();
+			entries.forEach((entry) => {
+				if (!commands.some((command) => command.category === entry.category && command.title === entry.title && command.text === entry.text)) commands.push(entry);
+			});
+			PunctuationButtons.saveCommands(commands);
+			presetState.targetSelection.clear();
+			renderPresetPanel();
+		};
 		const getTargetInsertIndex = (targetData, position, refId) => {
 			const orderBucket = ensureOrderBucket(targetData);
 			if (position === "top") return 0;
@@ -1766,6 +1876,7 @@ var PunctuationButtons = {
 			return orderBucket.order.length;
 		};
 		const insertPromptsToTarget = async (sourceEntries, position = "bottom", refId = null) => {
+			if (presetState.targetKind === "commands") return insertEntriesToCommandRepository(sourceEntries);
 			const targetName = presetState.targetPreset;
 			if (!targetName) return showModal({
 				msg: "请先选择目标预设。",
@@ -2424,6 +2535,11 @@ var PunctuationButtons = {
 			presetState.sourceSelection.clear();
 			renderPresetPanel();
 		});
+		$wrap.on("change", "#preset-target-kind", function() {
+			presetState.targetKind = String($(this).val() || "preset");
+			presetState.targetSelection.clear();
+			renderPresetPanel();
+		});
 		$wrap.on("change", "#preset-source-preset", function() {
 			presetState.sourcePreset = String($(this).val() || "");
 			presetState.sourceSelection.clear();
@@ -2439,9 +2555,19 @@ var PunctuationButtons = {
 			presetState.sourceSelection.clear();
 			renderPresetPanel();
 		});
+		$wrap.on("change", "#preset-target-command-category", function() {
+			presetState.targetCategory = String($(this).val() || Object.keys(DEFAULT_CMD_CATEGORIES)[0]);
+			presetState.targetSelection.clear();
+			renderPresetPanel();
+		});
 		$wrap.on("click", "[data-preset-category]", function() {
 			presetState.sourceCategory = String($(this).attr("data-preset-category") || Object.keys(DEFAULT_CMD_CATEGORIES)[0]);
 			presetState.sourceSelection.clear();
+			renderPresetPanel();
+		});
+		$wrap.on("click", "[data-preset-target-category]", function() {
+			presetState.targetCategory = String($(this).attr("data-preset-target-category") || Object.keys(DEFAULT_CMD_CATEGORIES)[0]);
+			presetState.targetSelection.clear();
 			renderPresetPanel();
 		});
 		$wrap.on("change", "#preset-target-mode", function() {
