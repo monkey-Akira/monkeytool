@@ -812,12 +812,12 @@ const PunctuationButtons = {
             
             .punct-tabs { display:flex; gap:6px; margin-bottom:16px; background:#f0f0f0; padding:5px; border:1.5px dashed #000; border-radius:16px; flex-shrink: 0; }
             .punct-tab { flex:1; border:1.5px solid #000; background:#fff; color:#000; border-radius:12px; padding:10px 8px; cursor:pointer; font-weight:bold; transition:all 0.2s; text-align:center; font-size:14px; font-family:inherit; text-shadow:none; }
-            .punct-tab.active { background:#000; color:#fff; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }
+            .punct-tab.active { background:#fff; color:#000; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }
             
             .punct-action { border:1.5px solid #000 !important; background:#fff; color:#000; border-radius:14px !important; padding:8px 14px; cursor:pointer; font-weight:700; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; gap:4px; box-shadow:1px 2px 5px #a7a7a7; font-family:inherit; text-shadow:none; }
             .punct-action:hover { background:#f0f0f0; transform:translateY(-1px); box-shadow:3px 3px 3px #80808075; }
             .punct-action:active { transform:translateY(0); box-shadow:none; }
-            .punct-action.active { background:#000; color:#fff; border-color:#000 !important; box-shadow:inset 1px 1px 3px #a7a7a7; transform:none; }
+            .punct-action.active { background:#e7e7e7; color:#000; border-color:#000 !important; box-shadow:inset 1px 1px 3px #a7a7a7; transform:none; }
             
             .punct-panel { border:1.5px solid #000; border-radius:18px; padding:16px; background:#fff; box-shadow:1px 2px 5px #a7a7a7; }
             .punct-field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; width: 100%; }
@@ -830,7 +830,7 @@ const PunctuationButtons = {
             .cmd-filter-bar { display:flex; flex-wrap:wrap; gap:6px; flex:1; }
             .cmd-tag { font-size:12px; padding:4px 12px; border-radius:999px; background:#fff; color:#000; cursor:pointer; user-select:none; transition:all 0.2s; font-weight:700; border:1.5px dashed #000; text-shadow:none; }
             .cmd-tag:hover { background:#f0f0f0; color:#000; box-shadow:1px 2px 5px #a7a7a7; }
-            .cmd-tag.active { background:#000; color:#fff; box-shadow:1px 2px 5px #a7a7a7; border-style:solid; }
+            .cmd-tag.active { background:#fff; color:#000; box-shadow:1px 2px 5px #a7a7a7; border-style:solid; }
             
             .cmd-editor-wrap { border:1.5px solid #000; background:#fff; padding:16px; border-radius:18px; margin-bottom:16px; display:none; box-shadow:1px 2px 5px #a7a7a7; }
             .cmd-tag-editor { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; align-items:center; }
@@ -913,7 +913,7 @@ const PunctuationButtons = {
             .preset-setup select, .preset-setup input, .preset-setup button { height:38px; }
             .preset-category-strip { display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:8px; border:1px dashed #d0d7de; border-radius:10px; background:#fff; min-height:38px; }
             .preset-category-strip button { min-height:28px; padding:4px 9px; border-radius:999px; font-size:12px; box-shadow:none; }
-            .preset-category-strip button.active { background:#000; color:#fff; border-color:#000; }
+            .preset-category-strip button.active { background:#fff; color:#000; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }
             .preset-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
             .preset-toggle-group { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
             .preset-toggle { display:inline-flex; gap:6px; align-items:center; font-size:12px; font-weight:700; }
@@ -925,6 +925,8 @@ const PunctuationButtons = {
             .preset-column-head { padding:10px 12px; border-bottom:1px solid #d0d7de; background:#f8fafc; display:flex; flex-direction:column; gap:8px; }
             .preset-column-title { display:flex; justify-content:space-between; gap:8px; align-items:center; }
             .preset-column-title h4 { margin:0; font-size:14px; font-weight:800; }
+            .preset-column-title-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+            .preset-collapse-btn { min-height:26px; padding:3px 9px; border-radius:999px; font-size:12px; box-shadow:none; }
             .preset-column-tools { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:6px; }
             .preset-column-tools.target-tools { grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto; }
             .preset-column-tools select, .preset-column-tools input, .preset-column-tools button { width:100%; min-width:0; height:34px; padding:6px 8px; font-size:12px; }
@@ -956,9 +958,9 @@ const PunctuationButtons = {
             .preset-quick-row { display:flex; gap:6px; flex-wrap:wrap; padding:8px; border:1px solid #d0d7de; border-radius:8px; background:#f8fafc; }
             .preset-quick-row button { border-radius:999px; min-height:28px; padding:4px 8px; font-size:12px; box-shadow:none; }
             .preset-form-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
-            .preset-dialog-mask { position:fixed; inset:0; display:none; place-items:center; padding:18px; background:rgba(15, 23, 42, .42); z-index:10005; }
+            .preset-dialog-mask { position:absolute; inset:0; display:none; place-items:center; padding:18px; background:rgba(15, 23, 42, .42); z-index:10005; border-radius:20px; }
             .preset-dialog-mask.open { display:grid; }
-            .preset-dialog { width:min(620px, 96vw); max-height:90vh; overflow:auto; border-radius:14px; background:#fff; box-shadow:0 24px 70px rgba(15, 23, 42, .32); }
+            .preset-dialog { width:min(620px, calc(100% - 24px)); max-height:min(90vh, calc(100% - 24px)); overflow:auto; border-radius:14px; background:#fff; box-shadow:0 24px 70px rgba(15, 23, 42, .32); }
             .preset-dialog-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid #d0d7de; }
             .preset-dialog-head h3 { margin:0; font-size:17px; }
             .preset-dialog-body { padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
@@ -1204,7 +1206,10 @@ const PunctuationButtons = {
                                 <div class="preset-column-head">
                                     <div class="preset-column-title">
                                         <h4 id="preset-source-title">源内容</h4>
-                                        <span class="preset-badge" id="preset-source-count">0 条</span>
+                                        <div class="preset-column-title-actions">
+                                            <span class="preset-badge" id="preset-source-count">0 条</span>
+                                            <button class="punct-action preset-collapse-btn" id="preset-source-collapse" type="button">折叠</button>
+                                        </div>
                                     </div>
                                     <div class="preset-column-tools">
                                         <input type="text" id="preset-source-search" placeholder="搜索源内容">
@@ -1227,7 +1232,10 @@ const PunctuationButtons = {
                                 <div class="preset-column-head">
                                     <div class="preset-column-title">
                                         <h4 id="preset-target-title">目标预设</h4>
-                                        <span class="preset-badge" id="preset-target-count">0 条</span>
+                                        <div class="preset-column-title-actions">
+                                            <span class="preset-badge" id="preset-target-count">0 条</span>
+                                            <button class="punct-action preset-collapse-btn" id="preset-target-collapse" type="button">折叠</button>
+                                        </div>
                                     </div>
                                     <div class="preset-column-tools target-tools">
                                         <input type="text" id="preset-target-search" placeholder="搜索目标条目">
@@ -1440,6 +1448,8 @@ const PunctuationButtons = {
             sourceSearch: '',
             targetSearch: '',
             targetMode: 'inserted',
+            sourceCollapsed: false,
+            targetCollapsed: false,
             sourceSelection: new Set(),
             targetSelection: new Set(),
             editEntry: null,
@@ -1807,8 +1817,14 @@ const PunctuationButtons = {
             $wrap.find('#preset-current-target, #preset-target-mode, #preset-delete-target').toggleClass('preset-hidden', presetState.targetKind !== 'preset');
             $wrap.find('#preset-target-command-category-field').toggleClass('preset-hidden', presetState.targetKind !== 'commands');
             $wrap.find('#preset-target-command-category-strip-field').toggleClass('preset-hidden', presetState.targetKind !== 'commands');
+            $wrap.find('#preset-source-collapse').text(presetState.sourceCollapsed ? '展开' : '折叠');
+            $wrap.find('#preset-target-collapse').text(presetState.targetCollapsed ? '展开' : '折叠');
+            $wrap.find('#preset-source-list').toggleClass('preset-hidden', presetState.sourceCollapsed);
+            $wrap.find('#preset-target-list').toggleClass('preset-hidden', presetState.targetCollapsed);
             renderPresetSourceList();
             renderPresetTargetList();
+            $wrap.find('#preset-source-list').toggleClass('preset-hidden', presetState.sourceCollapsed);
+            $wrap.find('#preset-target-list').toggleClass('preset-hidden', presetState.targetCollapsed);
             $wrap.toggleClass('preset-wide', true);
         };
 
@@ -2634,6 +2650,16 @@ const PunctuationButtons = {
         $wrap.on('click', '#preset-load-btn', renderPresetPanel);
         $wrap.on('click', '#preset-current-source', () => setPresetSelectionFromCurrent('source'));
         $wrap.on('click', '#preset-current-target', () => setPresetSelectionFromCurrent('target'));
+
+        $wrap.on('click', '#preset-source-collapse', () => {
+            presetState.sourceCollapsed = !presetState.sourceCollapsed;
+            renderPresetPanel();
+        });
+
+        $wrap.on('click', '#preset-target-collapse', () => {
+            presetState.targetCollapsed = !presetState.targetCollapsed;
+            renderPresetPanel();
+        });
 
         $wrap.on('change', '[data-source-check]', function() {
             const id = String($(this).attr('data-source-check'));
