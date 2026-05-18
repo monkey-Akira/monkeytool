@@ -964,7 +964,10 @@ var PunctuationButtons = {
             .preset-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
             .preset-toggle-group { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
             .preset-toggle { display:inline-flex; gap:6px; align-items:center; font-size:12px; font-weight:700; }
-            .preset-workbench { display:grid; grid-template-columns:minmax(0,1.15fr) 118px minmax(0,1.15fr); gap:14px; align-items:start; }
+            .preset-insert-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:center; padding:10px; border:1px solid #d0d7de; border-radius:12px; background:#fff; }
+            .preset-insert-bar button { min-height:36px; padding:7px 12px; font-size:13px; }
+            .preset-insert-hint { color:#667085; font-size:12px; font-weight:700; line-height:1.4; }
+            .preset-workbench { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:start; }
             .preset-column { border:1px solid #d0d7de; border-radius:12px; background:#fff; overflow:hidden; }
             .preset-column-head { padding:10px 12px; border-bottom:1px solid #d0d7de; background:#f8fafc; display:flex; flex-direction:column; gap:8px; }
             .preset-column-title { display:flex; justify-content:space-between; gap:8px; align-items:center; }
@@ -985,10 +988,8 @@ var PunctuationButtons = {
             .preset-tag { border-radius:999px; background:#edf2f7; color:#52606d; padding:2px 7px; font-size:11px; font-weight:700; }
             .preset-tag.warn { background:#fff0c2; color:#8a6100; }
             .preset-item-actions { display:flex; flex-direction:column; gap:5px; }
-            .preset-item-actions .icon-btn { min-width:30px; min-height:28px; padding:0; border-radius:8px; }
-            .preset-actions { display:flex; flex-direction:column; gap:8px; justify-content:center; position:sticky; top:16px; }
-            .preset-actions button { min-height:40px; padding:8px 6px; font-size:13px; }
-            .preset-actions .preset-note { border:1px dashed #d0d7de; border-radius:8px; background:#fff; color:#667085; padding:8px; font-size:12px; line-height:1.45; text-align:center; }
+            .preset-item-actions .icon-btn { min-width:30px; min-height:28px; padding:0 8px; border-radius:8px; white-space:nowrap; }
+            .preset-list-hint { border:1px dashed #d0d7de; border-radius:10px; background:#fff; color:#667085; padding:9px 10px; font-size:12px; line-height:1.45; font-weight:700; }
             .preset-editor { display:grid; grid-template-columns:minmax(200px,220px) minmax(0,1fr); gap:12px; }
             .preset-panel { border:1px solid #d0d7de; border-radius:12px; background:#fff; overflow:hidden; }
             .preset-panel-head { padding:10px 12px; border-bottom:1px solid #d0d7de; background:#f8fafc; font-size:14px; font-weight:800; }
@@ -1014,14 +1015,15 @@ var PunctuationButtons = {
 
             @media (max-width: 920px) {
                 .preset-setup-row, .preset-source-row, .preset-workbench, .preset-editor, .preset-form-grid { grid-template-columns:1fr; }
-                .preset-actions { position:static; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
-                .preset-actions .preset-note { grid-column:1 / -1; }
+                .preset-insert-bar { justify-content:stretch; }
+                .preset-insert-bar button { flex:1 1 42%; }
+                .preset-insert-hint { flex-basis:100%; text-align:center; }
             }
             @media (max-width: 620px) {
                 .preset-column-title, .preset-toolbar { flex-direction:column; align-items:stretch; }
                 .preset-column-tools, .preset-column-tools.target-tools { grid-template-columns:1fr 1fr; }
                 .preset-list { min-height:280px; max-height:none; }
-                .preset-actions { grid-template-columns:1fr; }
+                .preset-insert-bar button { flex-basis:100%; }
                 .preset-item { grid-template-columns:1fr; }
                 .preset-item input[type="checkbox"] { margin:0; }
                 .preset-item-actions { flex-direction:row; justify-content:flex-end; }
@@ -1213,6 +1215,14 @@ var PunctuationButtons = {
                             </div>
                         </div>
 
+                        <div class="preset-insert-bar">
+                            <button class="punct-action" id="preset-insert-top">插入到目标顶部</button>
+                            <button class="punct-action" id="preset-insert-after">插入到目标选中项后</button>
+                            <button class="punct-action" id="preset-insert-bottom" style="background:#000; color:#fff;">插入到目标底部</button>
+                            <button class="punct-action" id="preset-place-uninserted">插入选中的未插入提示词</button>
+                            <span class="preset-insert-hint">单向写入：只修改目标预设。</span>
+                        </div>
+
                         <div class="preset-workbench">
                             <div class="preset-column">
                                 <div class="preset-column-head">
@@ -1227,14 +1237,6 @@ var PunctuationButtons = {
                                     </div>
                                 </div>
                                 <div class="preset-list" id="preset-source-list"></div>
-                            </div>
-
-                            <div class="preset-actions">
-                                <button class="punct-action" id="preset-insert-top">插入顶部</button>
-                                <button class="punct-action" id="preset-insert-after">插入选中后</button>
-                                <button class="punct-action" id="preset-insert-bottom" style="background:#000; color:#fff;">插入底部</button>
-                                <button class="punct-action" id="preset-place-uninserted">插入未插入项</button>
-                                <div class="preset-note">单向写入：只修改目标预设。</div>
                             </div>
 
                             <div class="preset-column">
@@ -1600,8 +1602,9 @@ var PunctuationButtons = {
 			const entries = getSourceEntries();
 			presetState.sourceEntries = entries;
 			$wrap.find("#preset-source-count").text(`${entries.length} 条`);
+			const hint = presetState.sourceKind === "commands" ? "<div class=\"preset-list-hint\">勾选要插入的具体指令，然后点击上方插入按钮；也可以点单条“插入”直接写入目标预设。只会插入指令内容，默认 system，不带标题、标签和格式。</div>" : "<div class=\"preset-list-hint\">勾选源预设条目后插入到目标预设；源预设不会被修改。</div>";
 			if (!entries.length) {
-				$wrap.find("#preset-source-list").html("<div class=\"preset-empty\">没有可显示的源内容</div>");
+				$wrap.find("#preset-source-list").html(`${hint}<div class="preset-empty">没有可显示的源内容</div>`);
 				return;
 			}
 			const html = entries.map((entry, index) => {
@@ -1618,12 +1621,12 @@ var PunctuationButtons = {
                             <div class="preset-item-text">${PunctuationButtons.escapeHtml(entry.content || "")}</div>
                         </div>
                         <div class="preset-item-actions">
-                            <button class="icon-btn preset-source-insert" data-source-insert="${PunctuationButtons.escapeHtml(id)}" title="插入到目标">+</button>
+                            <button class="icon-btn preset-source-insert" data-source-insert="${PunctuationButtons.escapeHtml(id)}" title="插入到目标">${entry.sourceType === "command" ? "插入" : "+"}</button>
                         </div>
                     </article>
                 `;
 			}).join("");
-			$wrap.find("#preset-source-list").html(`${html}`);
+			$wrap.find("#preset-source-list").html(`${hint}${html}`);
 		};
 		const renderPresetTargetList = () => {
 			const entries = getTargetEntries();
@@ -1668,7 +1671,7 @@ var PunctuationButtons = {
 			$wrap.find("#preset-source-search").val(presetState.sourceSearch);
 			$wrap.find("#preset-target-search").val(presetState.targetSearch);
 			$wrap.find("#preset-target-mode").val(presetState.targetMode);
-			$wrap.find("#preset-source-title").text(presetState.sourceKind === "commands" ? `指令仓库: ${presetState.sourceCategory}` : `源预设: ${presetState.sourcePreset || "未选择"}`);
+			$wrap.find("#preset-source-title").text(presetState.sourceKind === "commands" ? `选择要插入的指令：${presetState.sourceCategory}` : `源预设: ${presetState.sourcePreset || "未选择"}`);
 			$wrap.find("#preset-target-title").text(`目标预设: ${presetState.targetPreset || "未选择"}`);
 			$wrap.find("#preset-source-preset-field").toggle(presetState.sourceKind === "preset");
 			$wrap.find("#preset-command-category-field").toggle(presetState.sourceKind === "commands");
