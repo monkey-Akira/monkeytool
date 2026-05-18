@@ -811,13 +811,13 @@ const PunctuationButtons = {
             .punct-title { font-size:18px; font-weight:800; letter-spacing:0; background:#fff; border:1.5px solid #000; border-left:2px solid #000; border-radius:14px; outline:none; padding:10px 18px; }
             
             .punct-tabs { display:flex; gap:6px; margin-bottom:16px; background:#f0f0f0; padding:5px; border:1.5px dashed #000; border-radius:16px; flex-shrink: 0; }
-            .punct-tab { flex:1; border:1.5px solid transparent; background:transparent; color:#555; border-radius:12px; padding:10px 8px; cursor:pointer; font-weight:bold; transition:all 0.2s; text-align:center; font-size:14px; font-family:inherit; text-shadow:none; }
-            .punct-tab.active { background:#fff; color:#000; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }
+            .punct-tab { flex:1; border:1.5px solid #000; background:#fff; color:#000; border-radius:12px; padding:10px 8px; cursor:pointer; font-weight:bold; transition:all 0.2s; text-align:center; font-size:14px; font-family:inherit; text-shadow:none; }
+            .punct-tab.active { background:#000; color:#fff; border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }
             
             .punct-action { border:1.5px solid #000 !important; background:#fff; color:#000; border-radius:14px !important; padding:8px 14px; cursor:pointer; font-weight:700; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; gap:4px; box-shadow:1px 2px 5px #a7a7a7; font-family:inherit; text-shadow:none; }
             .punct-action:hover { background:#f0f0f0; transform:translateY(-1px); box-shadow:3px 3px 3px #80808075; }
             .punct-action:active { transform:translateY(0); box-shadow:none; }
-            .punct-action.active { background:#e7e7e7; border-color:#000 !important; box-shadow:inset 1px 1px 3px #a7a7a7; transform:none; }
+            .punct-action.active { background:#000; color:#fff; border-color:#000 !important; box-shadow:inset 1px 1px 3px #a7a7a7; transform:none; }
             
             .punct-panel { border:1.5px solid #000; border-radius:18px; padding:16px; background:#fff; box-shadow:1px 2px 5px #a7a7a7; }
             .punct-field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; width: 100%; }
@@ -931,6 +931,8 @@ const PunctuationButtons = {
             .preset-list { min-height:360px; max-height:54vh; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px; background:#fbfcfe; }
             .preset-slot { border:1px dashed #2da44e; border-radius:8px; background:#f0fff4; color:#1a7f37; padding:8px; text-align:center; font-size:12px; font-weight:800; cursor:pointer; }
             .preset-item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:start; border:1px solid #d8dee4; border-radius:10px; background:#fff; padding:9px; }
+            .preset-item.clickable { cursor:pointer; }
+            .preset-item.clickable:hover { border-color:#000; box-shadow:1px 2px 5px #a7a7a7; }
             .preset-item.uninserted { border-style:dashed; background:#fffaf0; }
             .preset-item input[type="checkbox"] { width:16px; height:16px; min-width:16px; min-height:16px; margin-top:3px; accent-color:#1f6feb; }
             .preset-item-main { min-width:0; }
@@ -960,6 +962,7 @@ const PunctuationButtons = {
             .preset-dialog-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid #d0d7de; }
             .preset-dialog-head h3 { margin:0; font-size:17px; }
             .preset-dialog-body { padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+            .preset-detail-content { max-height:55vh; overflow:auto; white-space:pre-wrap; word-break:break-word; border:1px dashed #d0d7de; border-radius:10px; background:#fbfcfd; padding:12px; color:#24292f; font-size:13px; line-height:1.55; }
             .preset-wide { max-width:min(1040px, 96vw); }
             .preset-hidden { display:none !important; }
             .preset-empty { padding:32px 14px; text-align:center; color:#667085; border:1px dashed #d0d7de; border-radius:10px; background:#fff; }
@@ -1002,8 +1005,8 @@ const PunctuationButtons = {
                 <div class="cmd-confirm-text" id="custom-modal-msg"></div>
                 <input type="text" id="custom-modal-input" style="display:none; width:100%; box-sizing:border-box; margin-bottom:16px; padding:10px; border-radius:14px; border:1px solid rgba(0,0,0,0.15); font-family:inherit; outline:none;">
                 <div class="cmd-confirm-actions">
-                    <button class="punct-action" id="custom-modal-cancel" style="background:#fff; color:#000;">${UI_TEXT.actions.cancel}</button>
-                    <button class="punct-action" id="custom-modal-ok" style="background:#000; color:#fff;">${UI_TEXT.modal.ok}</button>
+                    <button class="punct-action" id="custom-modal-cancel">${UI_TEXT.actions.cancel}</button>
+                    <button class="punct-action" id="custom-modal-ok">${UI_TEXT.modal.ok}</button>
                 </div>
             </div>
         </div>
@@ -1015,8 +1018,8 @@ const PunctuationButtons = {
                 </div>
                 <div class="cmd-manager-list" id="cmd-manager-list"></div>
                 <div class="cmd-manager-actions">
-                    <button class="punct-action" id="cmd-manager-delete" style="color:#000;">删除选中</button>
-                    <button class="punct-action" id="cmd-manager-export" style="background:#000; color:#fff;">导出选中</button>
+                    <button class="punct-action" id="cmd-manager-delete">删除选中</button>
+                    <button class="punct-action" id="cmd-manager-export">导出选中</button>
                 </div>
             </div>
         </div>
@@ -1095,8 +1098,8 @@ const PunctuationButtons = {
                         <input type="text" id="cmd-cat-suffix" placeholder="${UI_TEXT.fields.suffixPlaceholder}" style="font-size:14px; padding:10px;">
                     </div>
                     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-                        <button class="punct-action" id="cmd-cat-cancel-btn" style="background:#fff; color:#000;">${UI_TEXT.actions.cancel}</button>
-                        <button class="punct-action" id="cmd-cat-save-btn" style="background:#000; color:#fff;">${UI_TEXT.actions.saveFormat}</button>
+                        <button class="punct-action" id="cmd-cat-cancel-btn">${UI_TEXT.actions.cancel}</button>
+                        <button class="punct-action" id="cmd-cat-save-btn">${UI_TEXT.actions.saveFormat}</button>
                     </div>
                 </div>
 
@@ -1115,8 +1118,8 @@ const PunctuationButtons = {
                         <div class="cmd-tag-editor" id="cmd-editor-tags"></div>
                     </div>
                     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-                        <button class="punct-action" id="cmd-cancel-btn" style="background:#fff; color:#000;">${UI_TEXT.actions.cancel}</button>
-                        <button class="punct-action" id="cmd-save-btn" style="background:#000; color:#fff;">${UI_TEXT.actions.saveCommand}</button>
+                        <button class="punct-action" id="cmd-cancel-btn">${UI_TEXT.actions.cancel}</button>
+                        <button class="punct-action" id="cmd-save-btn">${UI_TEXT.actions.saveCommand}</button>
                     </div>
                 </div>
 
@@ -1178,11 +1181,7 @@ const PunctuationButtons = {
                                             <select id="preset-target-preset"><option value="">请选择目标预设</option></select>
                                         </div>
                                         <button class="punct-action" id="preset-current-target">当前预设为目标</button>
-                                        <button class="punct-action" id="preset-load-btn" style="height:38px; background:#000; color:#fff;">读取</button>
-                                    </div>
-                                    <div class="preset-toggle-group">
-                                        <label class="preset-toggle"><input type="checkbox" id="preset-auto-enable" checked> 插入后自动开启条目</label>
-                                        <label class="preset-toggle"><input type="checkbox" id="preset-auto-save" checked> 自动保存目标预设</label>
+                                        <button class="punct-action" id="preset-load-btn" style="height:38px;">读取</button>
                                     </div>
                                 </div>
                             </div>
@@ -1195,10 +1194,7 @@ const PunctuationButtons = {
                             </div>
                             <div class="preset-step-body">
                                 <div class="preset-insert-bar">
-                                    <button class="punct-action" id="preset-insert-top">插入到目标顶部</button>
-                                    <button class="punct-action" id="preset-insert-after">插入到目标选中项后</button>
-                                    <button class="punct-action" id="preset-insert-bottom" style="background:#000; color:#fff;">插入到目标底部</button>
-                                    <button class="punct-action" id="preset-place-uninserted">插入选中的未插入提示词</button>
+                                    <button class="punct-action" id="preset-insert-selected">插入到目标</button>
                                 </div>
                             </div>
                         </div>
@@ -1241,7 +1237,7 @@ const PunctuationButtons = {
                                             <option value="all">显示全部</option>
                                         </select>
                                         <button class="punct-action" id="preset-target-all">全选</button>
-                                        <button class="punct-action" id="preset-delete-target" style="color:#000;">批量删除</button>
+                                        <button class="punct-action" id="preset-delete-target">批量删除</button>
                                     </div>
                                     <div class="preset-field preset-hidden" id="preset-target-command-category-field">
                                         <label>目标指令分类</label>
@@ -1308,8 +1304,20 @@ const PunctuationButtons = {
                                 <div class="preset-form-actions">
                                     <button class="punct-action" id="preset-edit-cancel">取消</button>
                                     <button class="punct-action" id="preset-edit-save">保存</button>
-                                    <button class="punct-action" id="preset-edit-save-insert" style="background:#000; color:#fff;">保存并插入</button>
+                                    <button class="punct-action" id="preset-edit-save-insert">保存并插入</button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preset-dialog-mask" id="preset-detail-layer">
+                        <div class="preset-dialog">
+                            <div class="preset-dialog-head">
+                                <h3 id="preset-detail-title">条目详情</h3>
+                                <button class="tag-manage-btn back-mode" id="preset-detail-close" title="关闭">×</button>
+                            </div>
+                            <div class="preset-dialog-body">
+                                <div class="preset-tags" id="preset-detail-meta"></div>
+                                <div class="preset-detail-content" id="preset-detail-content"></div>
                             </div>
                         </div>
                     </div>
@@ -1331,13 +1339,13 @@ const PunctuationButtons = {
             
             if (isPromptMode) {
                 $input.val(options.defaultVal || '').show();
-                $wrap.find('#custom-modal-ok').css('background', '#222').text(UI_TEXT.modal.ok);
+            $wrap.find('#custom-modal-ok').text(UI_TEXT.modal.ok);
             } else {
                 $input.hide();
                 if (options.isAlert) {
-                    $wrap.find('#custom-modal-ok').css('background', '#222').text(UI_TEXT.modal.gotIt);
+                    $wrap.find('#custom-modal-ok').text(UI_TEXT.modal.gotIt);
                 } else {
-                    $wrap.find('#custom-modal-ok').css('background', '#000').text(options.okText || UI_TEXT.modal.confirmAction);
+                    $wrap.find('#custom-modal-ok').text(options.okText || UI_TEXT.modal.confirmAction);
                 }
             }
             
@@ -1692,8 +1700,8 @@ const PunctuationButtons = {
             presetState.sourceEntries = entries;
             $wrap.find('#preset-source-count').text(`${entries.length} 条`);
             const hint = presetState.sourceKind === 'commands'
-                ? '<div class="preset-list-hint">勾选要插入的具体指令，然后点击上方插入按钮；也可以点单条“插入”直接写入目标预设。只会插入指令内容，默认 system，不带标题、标签和格式。</div>'
-                : '<div class="preset-list-hint">勾选源预设条目后插入到目标预设；源预设不会被修改。</div>';
+                ? '<div class="preset-list-hint">点击条目查看完整内容；勾选要插入的具体指令，然后点击上方插入按钮。写入预设时只会插入指令内容，默认 system。</div>'
+                : '<div class="preset-list-hint">点击条目查看完整内容；勾选源预设条目后插入到目标预设，源预设不会被修改。</div>';
             if (!entries.length) {
                 const emptyText = presetState.sourceKind === 'commands'
                     ? `当前分类「${PunctuationButtons.escapeHtml(presetState.sourceCategory)}」没有指令，请切换分类或先在指令仓库新增指令。`
@@ -1709,15 +1717,12 @@ const PunctuationButtons = {
                     ? '<span class="preset-tag">指令仓库</span><span class="preset-tag">system</span>'
                     : `<span class="preset-tag">${PunctuationButtons.escapeHtml(entry.role || 'system')}</span><span class="preset-tag">${entry.isUninserted ? '未插入' : '已插入'}</span>`;
                 return `
-                    <article class="preset-item ${entry.isUninserted ? 'uninserted' : ''}" data-id="${PunctuationButtons.escapeHtml(id)}">
+                    <article class="preset-item clickable ${entry.isUninserted ? 'uninserted' : ''}" data-source-detail="${PunctuationButtons.escapeHtml(id)}" data-id="${PunctuationButtons.escapeHtml(id)}">
                         <input type="checkbox" data-source-check="${PunctuationButtons.escapeHtml(id)}" ${checked}>
                         <div class="preset-item-main">
                             <div class="preset-item-name">${PunctuationButtons.escapeHtml(entry.name || '未命名')}</div>
                             <div class="preset-tags">${roleMeta}${badgeHtml}</div>
                             <div class="preset-item-text">${PunctuationButtons.escapeHtml(entry.content || '')}</div>
-                        </div>
-                        <div class="preset-item-actions">
-                            <button class="icon-btn preset-source-insert" data-source-insert="${PunctuationButtons.escapeHtml(id)}" title="插入到目标">${entry.sourceType === 'command' ? '插入' : '+'}</button>
                         </div>
                     </article>
                 `;
@@ -1799,7 +1804,7 @@ const PunctuationButtons = {
             $wrap.find('#preset-command-category-field').toggleClass('preset-hidden', presetState.sourceKind !== 'commands');
             $wrap.find('#preset-command-category-strip-field').toggleClass('preset-hidden', presetState.sourceKind !== 'commands');
             $wrap.find('#preset-target-preset').closest('.preset-field').toggleClass('preset-hidden', presetState.targetKind !== 'preset');
-            $wrap.find('#preset-current-target, #preset-target-mode, #preset-delete-target, #preset-place-uninserted').toggleClass('preset-hidden', presetState.targetKind !== 'preset');
+            $wrap.find('#preset-current-target, #preset-target-mode, #preset-delete-target').toggleClass('preset-hidden', presetState.targetKind !== 'preset');
             $wrap.find('#preset-target-command-category-field').toggleClass('preset-hidden', presetState.targetKind !== 'commands');
             $wrap.find('#preset-target-command-category-strip-field').toggleClass('preset-hidden', presetState.targetKind !== 'commands');
             renderPresetSourceList();
@@ -1886,6 +1891,13 @@ const PunctuationButtons = {
             return orderBucket.order.length;
         };
 
+        const getDefaultTargetInsertRef = () => [...presetState.targetSelection][0] || null;
+
+        const getDefaultTargetInsertArgs = () => {
+            const refId = getDefaultTargetInsertRef();
+            return { position: refId ? 'after' : 'bottom', refId };
+        };
+
         const insertPromptsToTarget = async (sourceEntries, position = 'bottom', refId = null) => {
             if (presetState.targetKind === 'commands') {
                 return insertEntriesToCommandRepository(sourceEntries);
@@ -1904,11 +1916,11 @@ const PunctuationButtons = {
                     const newPrompt = buildCommandSourcePrompt(entry);
                     newPrompt.name = ensureUniqueTargetName(targetData, newPrompt.name);
                     targetData.prompts.push(newPrompt);
-                    newOrderEntries.push({ identifier: newPrompt.identifier, enabled: $wrap.find('#preset-auto-enable').is(':checked') });
+                    newOrderEntries.push({ identifier: newPrompt.identifier, enabled: true });
                 } else {
                     const newPrompt = buildPresetCopyPrompt(entry, targetData);
                     targetData.prompts.push(newPrompt);
-                    newOrderEntries.push({ identifier: newPrompt.identifier, enabled: $wrap.find('#preset-auto-enable').is(':checked') });
+                    newOrderEntries.push({ identifier: newPrompt.identifier, enabled: true });
                 }
             });
 
@@ -1942,11 +1954,7 @@ const PunctuationButtons = {
                 const insertIndex = getTargetInsertIndex(targetData, insertMode, null);
                 orderBucket.order.splice(insertIndex, 0, { identifier: current.identifier, enabled: true });
             }
-            if ($wrap.find('#preset-auto-save').is(':checked')) {
-                await savePresetData(targetName, targetData);
-            } else {
-                await savePresetData(targetName, targetData);
-            }
+            await savePresetData(targetName, targetData);
             renderPresetPanel();
         };
 
@@ -1963,7 +1971,7 @@ const PunctuationButtons = {
                 orderBucket.order[existingIndex].enabled = true;
             } else {
                 const insertIndex = getTargetInsertIndex(targetData, position, refId);
-                orderBucket.order.splice(insertIndex, 0, { identifier: entryId, enabled: $wrap.find('#preset-auto-enable').is(':checked') });
+                orderBucket.order.splice(insertIndex, 0, { identifier: entryId, enabled: true });
             }
             await savePresetData(targetName, targetData);
             renderPresetPanel();
@@ -2006,23 +2014,32 @@ const PunctuationButtons = {
             $wrap.find('#preset-edit-layer').addClass('open');
         };
 
-        const openSourceInsertDialog = (entryId) => {
+        const openSourceDetailDialog = (entryId) => {
             const sourceEntries = getSourceEntries();
-            const entry = sourceEntries.find((item) => (item.identifier || item.commandId || '') === entryId);
+            const entry = sourceEntries.find((item, index) => (item.identifier || item.commandId || `source-${index}`) === entryId);
             if (!entry) return;
-            const refId = presetState.targetSelection.size ? [...presetState.targetSelection][0] : null;
-            insertPromptsToTarget([entry], 'bottom', refId);
+            const meta = [];
+            if (entry.sourceType === 'command') meta.push('指令仓库');
+            if (entry.role) meta.push(entry.role);
+            if (entry.isUninserted) meta.push('未插入');
+            else if (entry.sourceType !== 'command') meta.push('已插入');
+            if (entry.injection_order !== undefined) meta.push(`顺序 ${entry.injection_order}`);
+            if (entry.injection_depth !== undefined) meta.push(`深度 ${entry.injection_depth}`);
+            $wrap.find('#preset-detail-title').text(entry.name || '未命名');
+            $wrap.find('#preset-detail-meta').html(meta.map((item) => `<span class="preset-tag">${PunctuationButtons.escapeHtml(item)}</span>`).join(''));
+            $wrap.find('#preset-detail-content').text(entry.content || '');
+            $wrap.find('#preset-detail-layer').addClass('open');
         };
 
-        const moveSelectedSourceEntries = async (position) => {
+        const insertSelectedSourceEntries = async () => {
             const ids = new Set(presetState.sourceSelection);
             const entries = getSourceEntries().filter((entry, index) => {
                 const id = entry.identifier || entry.commandId || `source-${index}`;
                 return ids.has(id);
             });
             if (!entries.length) return showModal({ msg: '请先勾选源内容。', isAlert: true });
-            const refId = position === 'after' ? [...presetState.targetSelection][0] || null : null;
-            await insertPromptsToTarget(entries, position, refId);
+            const insertArgs = getDefaultTargetInsertArgs();
+            await insertPromptsToTarget(entries, insertArgs.position, insertArgs.refId);
         };
 
         const loadPresetPanel = () => {
@@ -2112,7 +2129,7 @@ const PunctuationButtons = {
                     <div class="punct-field"><label data-left-label>要插入的符号</label><input data-add-left></div>
                     <div class="punct-field" data-right-wrap style="display:none;"><label>右侧符号</label><input data-add-right></div>
                 </div>
-                <div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-save-add style="background:#000; color:#fff;">保存</button></div>
+                <div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-save-add>保存</button></div>
             `);
             $wrap.find('[data-add-type]').on('change', function () {
                 const isPair = window.jQuery(this).val() === 'pair';
@@ -2136,8 +2153,8 @@ const PunctuationButtons = {
                     <div class="punct-field"><label>右侧符号 (可留空)</label><input data-edit-right value="${PunctuationButtons.escapeHtml(item.right || '')}"></div>
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
-                    <button class="punct-action" data-back-edit style="background:#fff; color:#000;">返回</button>
-                    <button class="punct-action" data-save-edit style="background:#000; color:#fff;">保存</button>
+                    <button class="punct-action" data-back-edit>返回</button>
+                    <button class="punct-action" data-save-edit>保存</button>
                 </div>
             `);
             $wrap.find('[data-back-edit]').on('click', renderSymbolEdit);
@@ -2160,7 +2177,7 @@ const PunctuationButtons = {
                     <button class="punct-action" data-edit-one ${isDefault ? 'style="opacity:.45;" title="默认按钮只能删"' : ''}>修改</button>
                 </div>`;
             }).join('') : `<div style="text-align:center; padding:20px; color:#999;">${UI_TEXT.empty.noEditableSymbols}</div>`;
-            $wrap.find('#symbol-content').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" style="color:#000;" data-delete-picked>${UI_TEXT.actions.deleteSelected}</button></div>`);
+            $wrap.find('#symbol-content').html(`<div class="cmd-list-wrap">${rows}</div><div style="display:flex; justify-content:flex-end; margin-top:16px;"><button class="punct-action" data-delete-picked>${UI_TEXT.actions.deleteSelected}</button></div>`);
             const $list = $wrap.find('.cmd-list-wrap');
             let draggedRow = null;
             let pointerDragId = null;
@@ -2423,7 +2440,7 @@ const PunctuationButtons = {
                 const manageHeader = `
                     <div style="display:flex; gap:8px; margin-bottom:12px;">
                         <input type="text" id="manage-new-tag-input" class="cmd-search" placeholder="${UI_TEXT.fields.manageNewTag}" style="height:38px;">
-                        <button class="punct-action" id="manage-add-tag-btn" style="height:38px; background:#000; color:#fff; padding:0 16px;">${UI_TEXT.actions.addTag}</button>
+                        <button class="punct-action" id="manage-add-tag-btn" style="height:38px; padding:0 16px;">${UI_TEXT.actions.addTag}</button>
                     </div>
                 `;
 
@@ -2437,7 +2454,7 @@ const PunctuationButtons = {
                             </div>
                             <div style="display:flex; gap:8px;">
                                 <button class="punct-action tag-edit-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px;">${UI_TEXT.actions.rename}</button>
-                                <button class="punct-action tag-del-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px; color:#000;">${UI_TEXT.actions.delete}</button>
+                                <button class="punct-action tag-del-btn" data-tag="${PunctuationButtons.escapeHtml(tag)}" style="padding:6px 12px; font-size:12px;">${UI_TEXT.actions.delete}</button>
                             </div>
                         </div>
                     `).join('');
@@ -2468,7 +2485,7 @@ const PunctuationButtons = {
 
             $wrap.find('#cmd-filter-container').html(
                 globalTags.map(tag => `<div class="cmd-tag ${state.filterTags.includes(tag) ? 'active' : ''}" data-tag="${PunctuationButtons.escapeHtml(tag)}">${PunctuationButtons.escapeHtml(tag)}</div>`).join('')
-                + (state.filterTags.length > 0 ? `<div class="cmd-tag active" style="background:#000;" id="cmd-clear-filter">✖ 清除筛选</div>` : '')
+                + (state.filterTags.length > 0 ? `<div class="cmd-tag active" id="cmd-clear-filter">✖ 清除筛选</div>` : '')
             );
 
             const editorAvailableTags = Array.from(new Set([...globalTags, ...state.editorTags])).sort();
@@ -2651,29 +2668,13 @@ const PunctuationButtons = {
             renderPresetTargetList();
         });
 
-        $wrap.on('click', '.preset-source-insert', async function() {
-            const id = String($(this).attr('data-source-insert'));
-            const entries = getSourceEntries();
-            const entry = entries.find((item, index) => (item.identifier || item.commandId || `source-${index}`) === id);
-            try {
-                if (entry) await insertPromptsToTarget([entry], 'bottom', null);
-            } catch (error) {
-                showModal({ msg: `插入失败：${error.message}`, isAlert: true });
-            }
+        $wrap.on('click', '[data-source-detail]', function(event) {
+            if (window.jQuery(event.target).is('input, button, select, textarea, label')) return;
+            openSourceDetailDialog(String(window.jQuery(this).attr('data-source-detail')));
         });
 
-        $wrap.on('click', '#preset-insert-top', async () => {
-            try { await moveSelectedSourceEntries('top'); }
-            catch (error) { showModal({ msg: `插入失败：${error.message}`, isAlert: true }); }
-        });
-
-        $wrap.on('click', '#preset-insert-after', async () => {
-            try { await moveSelectedSourceEntries('after'); }
-            catch (error) { showModal({ msg: `插入失败：${error.message}`, isAlert: true }); }
-        });
-
-        $wrap.on('click', '#preset-insert-bottom', async () => {
-            try { await moveSelectedSourceEntries('bottom'); }
+        $wrap.on('click', '#preset-insert-selected', async () => {
+            try { await insertSelectedSourceEntries(); }
             catch (error) { showModal({ msg: `插入失败：${error.message}`, isAlert: true }); }
         });
 
@@ -2691,18 +2692,6 @@ const PunctuationButtons = {
             }
         });
 
-        $wrap.on('click', '#preset-place-uninserted', async () => {
-            try {
-                const ids = [...presetState.targetSelection];
-                if (!ids.length) return showModal({ msg: '请先勾选目标侧未插入提示词。', isAlert: true });
-                for (const id of ids) {
-                    await insertExistingTargetEntry(id, 'bottom', null);
-                }
-            } catch (error) {
-                showModal({ msg: `插入失败：${error.message}`, isAlert: true });
-            }
-        });
-
         $wrap.on('click', '#preset-delete-target', deleteSelectedTargetEntries);
 
         const closePresetEditor = () => {
@@ -2713,6 +2702,12 @@ const PunctuationButtons = {
         $wrap.on('click', '#preset-edit-close, #preset-edit-cancel', closePresetEditor);
         $wrap.on('click', '#preset-edit-layer', function(event) {
             if (event.target === this) closePresetEditor();
+        });
+
+        const closePresetDetail = () => $wrap.find('#preset-detail-layer').removeClass('open');
+        $wrap.on('click', '#preset-detail-close', closePresetDetail);
+        $wrap.on('click', '#preset-detail-layer', function(event) {
+            if (event.target === this) closePresetDetail();
         });
 
         const collectPresetEditForm = () => {
