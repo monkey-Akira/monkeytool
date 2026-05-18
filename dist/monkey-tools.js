@@ -971,9 +971,6 @@ var PunctuationButtons = {
             .preset-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
             .preset-toggle-group { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
             .preset-toggle { display:inline-flex; gap:6px; align-items:center; font-size:12px; font-weight:700; }
-            .preset-insert-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:center; padding:10px; border:1px solid #d0d7de; border-radius:12px; background:#fff; }
-            .preset-insert-bar button { min-height:36px; padding:7px 12px; font-size:13px; }
-            .preset-insert-hint { color:#667085; font-size:12px; font-weight:700; line-height:1.4; }
             .preset-workbench { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:start; }
             .preset-column { border:1px solid #d0d7de; border-radius:12px; background:#fff; overflow:hidden; }
             .preset-column-head { padding:10px 12px; border-bottom:1px solid #d0d7de; background:#f8fafc; display:flex; flex-direction:column; gap:8px; }
@@ -1027,9 +1024,6 @@ var PunctuationButtons = {
 
             @media (max-width: 920px) {
                 .preset-setup-row, .preset-source-row, .preset-workbench, .preset-editor, .preset-form-grid { grid-template-columns:1fr; }
-                .preset-insert-bar { justify-content:stretch; }
-                .preset-insert-bar button { flex:1 1 42%; }
-                .preset-insert-hint { flex-basis:100%; text-align:center; }
             }
             @media (max-width: 620px) {
                 .punct-settings { padding:10px; min-width:0; }
@@ -1043,9 +1037,8 @@ var PunctuationButtons = {
                 .preset-toggle { justify-content:flex-start; }
                 .preset-column-title, .preset-toolbar { flex-direction:column; align-items:stretch; }
                 .preset-column-tools, .preset-column-tools.target-tools { grid-template-columns:1fr; }
-                .preset-column-tools button, .preset-insert-bar button { min-height:34px; padding:6px 8px; white-space:normal; line-height:1.25; }
+                .preset-column-tools button { min-height:34px; padding:6px 8px; white-space:normal; line-height:1.25; }
                 .preset-list { min-height:280px; max-height:none; }
-                .preset-insert-bar button { flex-basis:100%; }
                 .preset-item { grid-template-columns:1fr; }
                 .preset-item input[type="checkbox"] { margin:0; }
                 .preset-item-actions { flex-direction:row; justify-content:flex-end; }
@@ -1238,18 +1231,6 @@ var PunctuationButtons = {
                                         <button class="punct-action" id="preset-current-target">当前预设为目标</button>
                                         <button class="punct-action" id="preset-load-btn" style="height:38px;">读取</button>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="preset-step">
-                            <div class="preset-step-head">
-                                <h4>3. 插入到目标</h4>
-                                <span class="preset-insert-hint">单向写入：只修改目标预设。</span>
-                            </div>
-                            <div class="preset-step-body">
-                                <div class="preset-insert-bar">
-                                    <button class="punct-action" id="preset-insert-selected">插入到目标</button>
                                 </div>
                             </div>
                         </div>
@@ -1707,7 +1688,7 @@ var PunctuationButtons = {
 			const entries = getSourceEntries();
 			presetState.sourceEntries = entries;
 			$wrap.find("#preset-source-count").text(`${entries.length} 条`);
-			const hint = presetState.sourceKind === "commands" ? "<div class=\"preset-list-hint\">点击条目查看完整内容；勾选要插入的具体指令，然后点击上方插入按钮。写入预设时只会插入指令内容，默认 system。</div>" : "<div class=\"preset-list-hint\">点击条目查看完整内容；勾选源预设条目后插入到目标预设，源预设不会被修改。</div>";
+			const hint = presetState.sourceKind === "commands" ? "<div class=\"preset-list-hint\">点击条目查看完整内容；勾选要插入的具体指令后，点击右侧目标条目即可插入到它上方。写入预设时只会插入指令内容，默认 system。</div>" : "<div class=\"preset-list-hint\">点击条目查看完整内容；勾选源预设条目后，点击右侧目标条目即可插入到它上方。源预设不会被修改。</div>";
 			if (!entries.length) {
 				const emptyText = presetState.sourceKind === "commands" ? `当前分类「${PunctuationButtons.escapeHtml(presetState.sourceCategory)}」没有指令，请切换分类或先在指令仓库新增指令。` : presetState.sourcePreset ? "当前源预设没有可插入条目。" : "请选择源预设。";
 				$wrap.find("#preset-source-list").html(`${hint}<div class="preset-empty">${emptyText}</div>`);
@@ -1771,7 +1752,7 @@ var PunctuationButtons = {
 				const checked = presetState.targetSelection.has(id) ? "checked" : "";
 				const isUninserted = !!entry.isUninserted;
 				return `
-                    <article class="preset-item ${isUninserted ? "uninserted" : ""}" data-id="${PunctuationButtons.escapeHtml(id)}">
+                    <article class="preset-item clickable ${isUninserted ? "uninserted" : ""}" data-target-drop="${PunctuationButtons.escapeHtml(id)}" data-id="${PunctuationButtons.escapeHtml(id)}">
                         <input type="checkbox" data-target-check="${PunctuationButtons.escapeHtml(id)}" ${checked}>
                         <div class="preset-item-main">
                             <div class="preset-item-name">${PunctuationButtons.escapeHtml(entry.name || "未命名")}</div>
@@ -1890,19 +1871,15 @@ var PunctuationButtons = {
 			const orderBucket = ensureOrderBucket(targetData);
 			if (position === "top") return 0;
 			if (position === "bottom") return orderBucket.order.length;
+			if (position === "before" && refId) {
+				const idx = orderBucket.order.findIndex((item) => item.identifier === refId);
+				return idx >= 0 ? idx : orderBucket.order.length;
+			}
 			if (position === "after" && refId) {
 				const idx = orderBucket.order.findIndex((item) => item.identifier === refId);
 				return idx >= 0 ? idx + 1 : orderBucket.order.length;
 			}
 			return orderBucket.order.length;
-		};
-		const getDefaultTargetInsertRef = () => [...presetState.targetSelection][0] || null;
-		const getDefaultTargetInsertArgs = () => {
-			const refId = getDefaultTargetInsertRef();
-			return {
-				position: refId ? "after" : "bottom",
-				refId
-			};
 		};
 		const insertPromptsToTarget = async (sourceEntries, position = "bottom", refId = null) => {
 			if (presetState.targetKind === "commands") return insertEntriesToCommandRepository(sourceEntries);
@@ -2078,18 +2055,17 @@ var PunctuationButtons = {
 				height: `${viewportHeight}px`
 			}).addClass("open");
 		};
-		const insertSelectedSourceEntries = async () => {
+		const insertSelectedSourceEntriesBeforeTarget = async (targetId) => {
 			const ids = new Set(presetState.sourceSelection);
 			const entries = getSourceEntries().filter((entry, index) => {
 				const id = entry.identifier || entry.commandId || `source-${index}`;
 				return ids.has(id);
 			});
 			if (!entries.length) return showModal({
-				msg: "请先勾选源内容。",
+				msg: "请先在左侧勾选要插入的源内容。",
 				isAlert: true
 			});
-			const insertArgs = getDefaultTargetInsertArgs();
-			await insertPromptsToTarget(entries, insertArgs.position, insertArgs.refId);
+			await insertPromptsToTarget(entries, "before", targetId);
 		};
 		const loadPresetPanel = () => {
 			fillPresetSelectors();
@@ -2678,9 +2654,10 @@ var PunctuationButtons = {
 			if (window.jQuery(event.target).is("input, button, select, textarea, label")) return;
 			openSourceDetailDialog(String(window.jQuery(this).attr("data-source-detail")));
 		});
-		$wrap.on("click", "#preset-insert-selected", async () => {
+		$wrap.on("click", "[data-target-drop]", async function(event) {
+			if (window.jQuery(event.target).is("input, button, select, textarea, label")) return;
 			try {
-				await insertSelectedSourceEntries();
+				await insertSelectedSourceEntriesBeforeTarget(String(window.jQuery(this).attr("data-target-drop")));
 			} catch (error) {
 				showModal({
 					msg: `插入失败：${error.message}`,
