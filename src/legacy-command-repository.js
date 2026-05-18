@@ -897,6 +897,73 @@ const PunctuationButtons = {
             .cmd-quick-btn { font-size:12px; font-weight:700; padding:4px 8px; border-radius:999px; background:#fff; border:1.5px dashed #000; color:#000; cursor:pointer; user-select:none; transition:all 0.2s; text-shadow:none; }
             .cmd-quick-btn:hover { background:#f0f0f0; color:#000; border-color:#000; transform:translateY(-1px); box-shadow:1px 2px 5px #a7a7a7; }
             .cmd-quick-btn:active { transform:scale(0.95); }
+
+            .preset-shell { display:flex; flex-direction:column; gap:12px; }
+            .preset-setup { display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end; }
+            .preset-setup .preset-field { display:flex; flex-direction:column; gap:6px; }
+            .preset-setup select, .preset-setup input, .preset-setup button { height:38px; }
+            .preset-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
+            .preset-toggle-group { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+            .preset-toggle { display:inline-flex; gap:6px; align-items:center; font-size:12px; font-weight:700; }
+            .preset-workbench { display:grid; grid-template-columns:minmax(0,1fr) 102px minmax(0,1fr); gap:12px; align-items:start; }
+            .preset-column { border:1px solid #d0d7de; border-radius:12px; background:#fff; overflow:hidden; }
+            .preset-column-head { padding:10px 12px; border-bottom:1px solid #d0d7de; background:#f8fafc; display:flex; flex-direction:column; gap:8px; }
+            .preset-column-title { display:flex; justify-content:space-between; gap:8px; align-items:center; }
+            .preset-column-title h4 { margin:0; font-size:14px; font-weight:800; }
+            .preset-column-tools { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:6px; }
+            .preset-column-tools.target-tools { grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto; }
+            .preset-column-tools select, .preset-column-tools input, .preset-column-tools button { height:34px; padding:6px 8px; font-size:12px; }
+            .preset-list { min-height:360px; max-height:52vh; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px; background:#fbfcfe; }
+            .preset-slot { border:1px dashed #2da44e; border-radius:8px; background:#f0fff4; color:#1a7f37; padding:8px; text-align:center; font-size:12px; font-weight:800; cursor:pointer; }
+            .preset-item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:start; border:1px solid #d8dee4; border-radius:10px; background:#fff; padding:9px; }
+            .preset-item.uninserted { border-style:dashed; background:#fffaf0; }
+            .preset-item input[type="checkbox"] { width:16px; height:16px; min-width:16px; min-height:16px; margin-top:3px; accent-color:#1f6feb; }
+            .preset-item-main { min-width:0; }
+            .preset-item-name { font-size:13px; font-weight:800; line-height:1.35; word-break:break-word; }
+            .preset-item-meta { margin-top:4px; color:#667085; font-size:11px; line-height:1.5; }
+            .preset-item-text { margin-top:5px; color:#52606d; font-size:12px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
+            .preset-tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:5px; }
+            .preset-tag { border-radius:999px; background:#edf2f7; color:#52606d; padding:2px 7px; font-size:11px; font-weight:700; }
+            .preset-tag.warn { background:#fff0c2; color:#8a6100; }
+            .preset-item-actions { display:flex; flex-direction:column; gap:5px; }
+            .preset-item-actions .icon-btn { min-width:30px; min-height:28px; padding:0; border-radius:8px; }
+            .preset-actions { display:flex; flex-direction:column; gap:8px; justify-content:center; position:sticky; top:16px; }
+            .preset-actions button { min-height:40px; padding:8px 6px; font-size:13px; }
+            .preset-actions .preset-note { border:1px dashed #d0d7de; border-radius:8px; background:#fff; color:#667085; padding:8px; font-size:12px; line-height:1.45; text-align:center; }
+            .preset-editor { display:grid; grid-template-columns:240px minmax(0,1fr); gap:12px; }
+            .preset-panel { border:1px solid #d0d7de; border-radius:12px; background:#fff; overflow:hidden; }
+            .preset-panel-head { padding:10px 12px; border-bottom:1px solid #d0d7de; background:#f8fafc; font-size:14px; font-weight:800; }
+            .preset-panel-body { padding:12px; display:flex; flex-direction:column; gap:10px; }
+            .preset-template { border:1px solid #d8dee4; border-radius:8px; background:#fbfcfd; padding:9px; cursor:pointer; }
+            .preset-template strong { display:block; margin-bottom:4px; font-size:13px; }
+            .preset-template span { color:#667085; font-size:12px; line-height:1.45; }
+            .preset-form-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:9px; }
+            .preset-quick-row { display:flex; gap:6px; flex-wrap:wrap; padding:8px; border:1px solid #d0d7de; border-radius:8px; background:#f8fafc; }
+            .preset-quick-row button { border-radius:999px; min-height:28px; padding:4px 8px; font-size:12px; box-shadow:none; }
+            .preset-form-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+            .preset-dialog-mask { position:fixed; inset:0; display:none; place-items:center; padding:18px; background:rgba(15, 23, 42, .42); z-index:10005; }
+            .preset-dialog-mask.open { display:grid; }
+            .preset-dialog { width:min(620px, 96vw); max-height:90vh; overflow:auto; border-radius:14px; background:#fff; box-shadow:0 24px 70px rgba(15, 23, 42, .32); }
+            .preset-dialog-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid #d0d7de; }
+            .preset-dialog-head h3 { margin:0; font-size:17px; }
+            .preset-dialog-body { padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+            .preset-wide { max-width:min(1040px, 96vw); }
+            .preset-hidden { display:none !important; }
+            .preset-empty { padding:32px 14px; text-align:center; color:#667085; border:1px dashed #d0d7de; border-radius:10px; background:#fff; }
+            .preset-badge { border:1px dashed #d0d7de; border-radius:999px; padding:3px 8px; font-size:11px; font-weight:700; color:#475467; background:#fff; white-space:nowrap; }
+            .preset-badge.warn { background:#fff0c2; color:#8a6100; border-color:#f2c94c; }
+
+            @media (max-width: 920px) {
+                .preset-setup, .preset-workbench, .preset-editor, .preset-form-grid { grid-template-columns:1fr; }
+                .preset-actions { position:static; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
+                .preset-actions .preset-note { grid-column:1 / -1; }
+            }
+            @media (max-width: 620px) {
+                .preset-column-title, .preset-toolbar { flex-direction:column; align-items:stretch; }
+                .preset-column-tools, .preset-column-tools.target-tools { grid-template-columns:1fr 1fr; }
+                .preset-list { min-height:300px; }
+                .preset-actions { grid-template-columns:1fr; }
+            }
         </style>
     `,
 
@@ -934,7 +1001,7 @@ const PunctuationButtons = {
         const $ = window.jQuery;
 
         let state = {
-            activeMainView: initialView === 'symbols' ? 'symbols' : 'commands',
+            activeMainView: initialView === 'symbols' ? 'symbols' : (initialView === 'presets' ? 'presets' : 'commands'),
             activeTab: Object.keys(DEFAULT_CMD_CATEGORIES)[0],
             searchText: '',
             filterTags: [], 
@@ -959,6 +1026,7 @@ const PunctuationButtons = {
                 <div class="punct-tabs monkey-main-tabs">
                     <button class="punct-tab monkey-main-tab ${state.activeMainView === 'commands' ? 'active' : ''}" data-main-view="commands">${UI_TEXT.mainTabs.commands}</button>
                     <button class="punct-tab monkey-main-tab ${state.activeMainView === 'symbols' ? 'active' : ''}" data-main-view="symbols">${UI_TEXT.mainTabs.symbols}</button>
+                    <button class="punct-tab monkey-main-tab ${state.activeMainView === 'presets' ? 'active' : ''}" data-main-view="presets">预设插入</button>
                 </div>
                 <div data-main-panel="commands">
                 <div class="punct-head" style="justify-content:flex-end;">
@@ -1037,6 +1105,145 @@ const PunctuationButtons = {
                         <button class="punct-tab" data-symbol-view="edit">${UI_TEXT.symbols.editTab}</button>
                     </div>
                     <div class="punct-panel" id="symbol-content"></div>
+                </div>
+                <div data-main-panel="presets" style="display:none;">
+                    <div class="preset-shell">
+                        <div class="preset-setup">
+                            <div class="preset-field">
+                                <label>左侧来源</label>
+                                <select id="preset-source-kind">
+                                    <option value="preset">源预设</option>
+                                    <option value="commands">指令仓库</option>
+                                </select>
+                            </div>
+                            <div class="preset-field" id="preset-source-preset-field">
+                                <label>源预设</label>
+                                <select id="preset-source-preset"><option value="">请选择源预设</option></select>
+                            </div>
+                            <div class="preset-field preset-hidden" id="preset-command-category-field">
+                                <label>指令分类</label>
+                                <select id="preset-command-category"></select>
+                            </div>
+                            <div class="preset-field">
+                                <label>目标预设</label>
+                                <select id="preset-target-preset"><option value="">请选择目标预设</option></select>
+                            </div>
+                            <button class="punct-action" id="preset-load-btn" style="height:38px; background:#000; color:#fff;">读取</button>
+                        </div>
+
+                        <div class="preset-toolbar">
+                            <div class="preset-toggle-group">
+                                <label class="preset-toggle"><input type="checkbox" id="preset-auto-enable" checked> 插入后自动开启条目</label>
+                                <label class="preset-toggle"><input type="checkbox" id="preset-auto-save" checked> 自动保存目标预设</label>
+                            </div>
+                            <div class="preset-toggle-group">
+                                <button class="punct-action" id="preset-current-source">当前预设为源</button>
+                                <button class="punct-action" id="preset-current-target">当前预设为目标</button>
+                            </div>
+                        </div>
+
+                        <div class="preset-workbench">
+                            <div class="preset-column">
+                                <div class="preset-column-head">
+                                    <div class="preset-column-title">
+                                        <h4 id="preset-source-title">源内容</h4>
+                                        <span class="preset-badge" id="preset-source-count">0 条</span>
+                                    </div>
+                                    <div class="preset-column-tools">
+                                        <input type="text" id="preset-source-search" placeholder="搜索源内容">
+                                        <button class="punct-action" id="preset-source-all">全选</button>
+                                        <button class="punct-action" id="preset-source-none">清空</button>
+                                    </div>
+                                </div>
+                                <div class="preset-list" id="preset-source-list"></div>
+                            </div>
+
+                            <div class="preset-actions">
+                                <button class="punct-action" id="preset-insert-top">插入顶部</button>
+                                <button class="punct-action" id="preset-insert-after">插入选中后</button>
+                                <button class="punct-action" id="preset-insert-bottom" style="background:#000; color:#fff;">插入底部</button>
+                                <button class="punct-action" id="preset-place-uninserted">插入未插入项</button>
+                                <div class="preset-note">单向写入：只修改目标预设。</div>
+                            </div>
+
+                            <div class="preset-column">
+                                <div class="preset-column-head">
+                                    <div class="preset-column-title">
+                                        <h4 id="preset-target-title">目标预设</h4>
+                                        <span class="preset-badge" id="preset-target-count">0 条</span>
+                                    </div>
+                                    <div class="preset-column-tools target-tools">
+                                        <input type="text" id="preset-target-search" placeholder="搜索目标条目">
+                                        <select id="preset-target-mode">
+                                            <option value="inserted">已插入条目</option>
+                                            <option value="uninserted">显示未插入提示词</option>
+                                            <option value="all">显示全部</option>
+                                        </select>
+                                        <button class="punct-action" id="preset-target-all">全选</button>
+                                        <button class="punct-action" id="preset-delete-target" style="color:#000;">批量删除</button>
+                                    </div>
+                                </div>
+                                <div class="preset-list" id="preset-target-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preset-dialog-mask" id="preset-edit-layer">
+                        <div class="preset-dialog">
+                            <div class="preset-dialog-head">
+                                <h3>编辑目标条目</h3>
+                                <button class="tag-manage-btn back-mode" id="preset-edit-close" title="关闭">×</button>
+                            </div>
+                            <div class="preset-dialog-body">
+                                <div class="preset-form-grid">
+                                    <div class="punct-field">
+                                        <label>条目名称</label>
+                                        <input type="text" id="preset-edit-name">
+                                    </div>
+                                    <div class="punct-field">
+                                        <label>角色</label>
+                                        <select id="preset-edit-role">
+                                            <option value="system">system</option>
+                                            <option value="user">user</option>
+                                            <option value="assistant">assistant</option>
+                                        </select>
+                                    </div>
+                                    <div class="punct-field">
+                                        <label>注入位置</label>
+                                        <select id="preset-edit-position">
+                                            <option value="relative">相对</option>
+                                            <option value="chat">聊天中</option>
+                                        </select>
+                                    </div>
+                                    <div class="punct-field">
+                                        <label>注入深度</label>
+                                        <input type="number" id="preset-edit-depth" min="0" max="100">
+                                    </div>
+                                </div>
+                                <div class="preset-form-grid">
+                                    <div class="punct-field">
+                                        <label>注入顺序</label>
+                                        <input type="number" id="preset-edit-order">
+                                    </div>
+                                    <div class="punct-field" style="grid-column: span 3;">
+                                        <label>触发条件，逗号分隔</label>
+                                        <input type="text" id="preset-edit-triggers" placeholder="user, assistant">
+                                    </div>
+                                </div>
+                                <div class="punct-field">
+                                    <label>内容</label>
+                                    <div class="preset-quick-row" id="preset-edit-quick-row">
+                                        ${quickInsertsHtml}
+                                    </div>
+                                    <textarea id="preset-edit-content" rows="8"></textarea>
+                                </div>
+                                <div class="preset-form-actions">
+                                    <button class="punct-action" id="preset-edit-cancel">取消</button>
+                                    <button class="punct-action" id="preset-edit-save">保存</button>
+                                    <button class="punct-action" id="preset-edit-save-insert" style="background:#000; color:#fff;">保存并插入</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 ${PunctuationButtons.modalHtml}
             </div>
@@ -1144,6 +1351,454 @@ const PunctuationButtons = {
         const normalizeCategoryName = (categoryName) => {
             const categories = Object.keys(DEFAULT_CMD_CATEGORIES);
             return categories.includes(categoryName) ? categoryName : categories[0];
+        };
+
+        const presetState = {
+            sourceKind: 'preset',
+            sourcePreset: '',
+            targetPreset: '',
+            sourceCategory: Object.keys(DEFAULT_CMD_CATEGORIES)[0],
+            sourceSearch: '',
+            targetSearch: '',
+            targetMode: 'inserted',
+            sourceSelection: new Set(),
+            targetSelection: new Set(),
+            editEntry: null,
+            editIsNew: false,
+            editShouldInsert: false,
+        };
+
+        const presetTimestamp = () => {
+            const now = new Date();
+            const pad = (value) => String(value).padStart(2, '0');
+            return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
+        };
+
+        const presetApiInfo = () => {
+            try {
+                const context = window.SillyTavern?.getContext?.() || {};
+                const mainApi = context.mainApi;
+                const manager = context.getPresetManager?.(mainApi === 'koboldhorde' ? 'kobold' : mainApi);
+                if (!manager) return null;
+                const presetNames = (() => {
+                    try {
+                        const list = manager.getPresetList?.();
+                        if (Array.isArray(list?.preset_names)) return list.preset_names;
+                        if (list?.preset_names && typeof list.preset_names === 'object') return Object.keys(list.preset_names);
+                        if (Array.isArray(list)) return list;
+                        return [];
+                    } catch (_) {
+                        return [];
+                    }
+                })();
+                return { context, mainApi, presetManager: manager, presetNames };
+            } catch (error) {
+                return null;
+            }
+        };
+
+        const getPresetNames = () => presetApiInfo()?.presetNames || [];
+        const getLoadedPresetName = () => window.getLoadedPresetName?.() || window.TavernHelper?.getLoadedPresetName?.() || null;
+        const cloneData = (value) => JSON.parse(JSON.stringify(value));
+
+        const getPresetDataByName = (name) => {
+            const apiInfo = presetApiInfo();
+            if (!apiInfo || !name) return null;
+            try {
+                return apiInfo.presetManager.getCompletionPresetByName(name);
+            } catch (error) {
+                return null;
+            }
+        };
+
+        const savePresetData = async (name, data) => {
+            const apiInfo = presetApiInfo();
+            if (!apiInfo) throw new Error('无法获取预设管理器');
+            await apiInfo.presetManager.savePreset(name, data);
+        };
+
+        const ensureOrderBucket = (presetData) => {
+            if (!presetData.prompt_order) presetData.prompt_order = [];
+            let bucket = presetData.prompt_order.find((order) => order.character_id === 100001);
+            if (!bucket) {
+                bucket = { character_id: 100001, order: [] };
+                presetData.prompt_order.push(bucket);
+            }
+            return bucket;
+        };
+
+        const ensureUniqueTargetName = (presetData, baseName) => {
+            const existingNames = new Set((presetData.prompts || []).map((item) => item && item.name).filter(Boolean));
+            if (!existingNames.has(baseName)) return baseName;
+            const stamp = presetTimestamp();
+            let candidate = `${baseName}_${stamp}`;
+            let index = 2;
+            while (existingNames.has(candidate)) {
+                candidate = `${baseName}_${stamp}_${index}`;
+                index += 1;
+            }
+            return candidate;
+        };
+
+        const normalizePromptItem = (prompt, enabled = true, isUninserted = false) => ({
+            ...cloneData(prompt),
+            enabled: !!enabled,
+            isUninserted: !!isUninserted,
+        });
+
+        const getPromptEntriesFromPreset = (presetData, mode = 'all') => {
+            const prompts = Array.isArray(presetData?.prompts)
+                ? presetData.prompts.filter((prompt) => prompt && !prompt.system_prompt && !prompt.marker && String(prompt.name || '').trim())
+                : [];
+            const orderBucket = presetData?.prompt_order?.find((order) => order.character_id === 100001);
+            const ordered = [];
+            const insertedIds = new Set();
+
+            if (orderBucket?.order?.length) {
+                orderBucket.order.forEach((orderEntry) => {
+                    const prompt = prompts.find((item) => item.identifier === orderEntry.identifier);
+                    if (!prompt) return;
+                    insertedIds.add(prompt.identifier);
+                    ordered.push(normalizePromptItem(prompt, orderEntry.enabled !== false, false));
+                });
+            }
+
+            const uninserted = prompts
+                .filter((prompt) => !insertedIds.has(prompt.identifier))
+                .map((prompt) => normalizePromptItem(prompt, false, true));
+
+            if (mode === 'inserted') return ordered;
+            if (mode === 'uninserted') return uninserted;
+            return ordered.concat(uninserted);
+        };
+
+        const getSourceEntries = () => {
+            if (presetState.sourceKind === 'commands') {
+                return PunctuationButtons.loadCommands()
+                    .filter((command) => normalizeCategoryName(command.category) === presetState.sourceCategory)
+                    .map((command) => ({
+                        sourceType: 'command',
+                        commandId: command.id,
+                        name: command.title || command.text?.slice(0, 12) || '指令内容',
+                        content: command.text || '',
+                        role: 'system',
+                        isCommand: true,
+                    }))
+                    .filter((entry) => {
+                        const query = presetState.sourceSearch.trim().toLowerCase();
+                        if (!query) return true;
+                        return [entry.content, entry.name].some((value) => String(value || '').toLowerCase().includes(query));
+                    });
+            }
+            if (!presetState.sourcePreset) return [];
+            return getPromptEntriesFromPreset(getPresetDataByName(presetState.sourcePreset), 'all').filter((entry) => {
+                const query = presetState.sourceSearch.trim().toLowerCase();
+                if (!query) return true;
+                return [entry.name, entry.content, entry.role, entry.injection_order, entry.injection_depth]
+                    .map((value) => String(value ?? ''))
+                    .join(' ')
+                    .toLowerCase()
+                    .includes(query);
+            });
+        };
+
+        const getTargetEntries = () => {
+            if (!presetState.targetPreset) return [];
+            return getPromptEntriesFromPreset(getPresetDataByName(presetState.targetPreset), presetState.targetMode).filter((entry) => {
+                const query = presetState.targetSearch.trim().toLowerCase();
+                if (!query) return true;
+                return [entry.name, entry.content, entry.role, entry.injection_order, entry.injection_depth]
+                    .map((value) => String(value ?? ''))
+                    .join(' ')
+                    .toLowerCase()
+                    .includes(query);
+            });
+        };
+
+        const commandCategoryOptions = () => Object.keys(DEFAULT_CMD_CATEGORIES).map((category) => `<option value="${PunctuationButtons.escapeHtml(category)}" ${presetState.sourceCategory === category ? 'selected' : ''}>${PunctuationButtons.escapeHtml(category)}</option>`).join('');
+
+        const fillPresetSelectors = () => {
+            const names = getPresetNames();
+            const selectedSource = presetState.sourcePreset;
+            const selectedTarget = presetState.targetPreset;
+            $wrap.find('#preset-source-preset').html(`<option value="">请选择源预设</option>${names.map((name) => `<option value="${PunctuationButtons.escapeHtml(name)}" ${selectedSource === name ? 'selected' : ''}>${PunctuationButtons.escapeHtml(name)}</option>`).join('')}`);
+            $wrap.find('#preset-target-preset').html(`<option value="">请选择目标预设</option>${names.map((name) => `<option value="${PunctuationButtons.escapeHtml(name)}" ${selectedTarget === name ? 'selected' : ''}>${PunctuationButtons.escapeHtml(name)}</option>`).join('')}`);
+            $wrap.find('#preset-command-category').html(commandCategoryOptions());
+        };
+
+        const renderPresetSourceList = () => {
+            const entries = getSourceEntries();
+            presetState.sourceEntries = entries;
+            $wrap.find('#preset-source-count').text(`${entries.length} 条`);
+            if (!entries.length) {
+                $wrap.find('#preset-source-list').html('<div class="preset-empty">没有可显示的源内容</div>');
+                return;
+            }
+            const html = entries.map((entry, index) => {
+                const id = entry.identifier || entry.commandId || `source-${index}`;
+                const checked = presetState.sourceSelection.has(id) ? 'checked' : '';
+                const badgeHtml = entry.isUninserted ? '<span class="preset-tag warn">未插入</span>' : '';
+                const roleMeta = entry.sourceType === 'command'
+                    ? '<span class="preset-tag">指令仓库</span><span class="preset-tag">system</span>'
+                    : `<span class="preset-tag">${PunctuationButtons.escapeHtml(entry.role || 'system')}</span><span class="preset-tag">${entry.isUninserted ? '未插入' : '已插入'}</span>`;
+                return `
+                    <article class="preset-item ${entry.isUninserted ? 'uninserted' : ''}" data-id="${PunctuationButtons.escapeHtml(id)}">
+                        <input type="checkbox" data-source-check="${PunctuationButtons.escapeHtml(id)}" ${checked}>
+                        <div class="preset-item-main">
+                            <div class="preset-item-name">${PunctuationButtons.escapeHtml(entry.name || '未命名')}</div>
+                            <div class="preset-tags">${roleMeta}${badgeHtml}</div>
+                            <div class="preset-item-text">${PunctuationButtons.escapeHtml(entry.content || '')}</div>
+                        </div>
+                        <div class="preset-item-actions">
+                            <button class="icon-btn preset-source-insert" data-source-insert="${PunctuationButtons.escapeHtml(id)}" title="插入到目标">+</button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+            $wrap.find('#preset-source-list').html(`${html}`);
+        };
+
+        const renderPresetTargetList = () => {
+            const entries = getTargetEntries();
+            presetState.targetEntries = entries;
+            $wrap.find('#preset-target-count').text(`${entries.length} 条`);
+            if (!presetState.targetPreset) {
+                $wrap.find('#preset-target-list').html('<div class="preset-empty">请选择目标预设</div>');
+                return;
+            }
+            if (!entries.length) {
+                $wrap.find('#preset-target-list').html('<div class="preset-empty">没有可显示的目标条目</div>');
+                return;
+            }
+            const html = entries.map((entry, index) => {
+                const id = entry.identifier || `target-${index}`;
+                const checked = presetState.targetSelection.has(id) ? 'checked' : '';
+                const isUninserted = !!entry.isUninserted;
+                return `
+                    <article class="preset-item ${isUninserted ? 'uninserted' : ''}" data-id="${PunctuationButtons.escapeHtml(id)}">
+                        <input type="checkbox" data-target-check="${PunctuationButtons.escapeHtml(id)}" ${checked}>
+                        <div class="preset-item-main">
+                            <div class="preset-item-name">${PunctuationButtons.escapeHtml(entry.name || '未命名')}</div>
+                            <div class="preset-tags">
+                                <span class="preset-tag">${PunctuationButtons.escapeHtml(entry.role || 'system')}</span>
+                                ${isUninserted ? '<span class="preset-tag warn">未插入提示词</span>' : '<span class="preset-tag">已插入</span>'}
+                                <span class="preset-tag">顺序 ${PunctuationButtons.escapeHtml(String(entry.injection_order ?? 100))}</span>
+                            </div>
+                            <div class="preset-item-text">${PunctuationButtons.escapeHtml(entry.content || '')}</div>
+                        </div>
+                        <div class="preset-item-actions">
+                            <button class="icon-btn preset-target-edit" data-target-edit="${PunctuationButtons.escapeHtml(id)}" title="编辑">✎</button>
+                            <button class="icon-btn preset-target-insert" data-target-insert="${PunctuationButtons.escapeHtml(id)}" title="插入到指定位置">⌖</button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+            $wrap.find('#preset-target-list').html(`${html}`);
+        };
+
+        const renderPresetPanel = () => {
+            fillPresetSelectors();
+            $wrap.find('#preset-source-kind').val(presetState.sourceKind);
+            $wrap.find('#preset-source-search').val(presetState.sourceSearch);
+            $wrap.find('#preset-target-search').val(presetState.targetSearch);
+            $wrap.find('#preset-target-mode').val(presetState.targetMode);
+            $wrap.find('#preset-source-title').text(presetState.sourceKind === 'commands' ? `指令仓库: ${presetState.sourceCategory}` : `源预设: ${presetState.sourcePreset || '未选择'}`);
+            $wrap.find('#preset-target-title').text(`目标预设: ${presetState.targetPreset || '未选择'}`);
+            $wrap.find('#preset-source-preset-field').toggle(presetState.sourceKind === 'preset');
+            $wrap.find('#preset-command-category-field').toggle(presetState.sourceKind === 'commands');
+            renderPresetSourceList();
+            renderPresetTargetList();
+            $wrap.toggleClass('preset-wide', true);
+        };
+
+        const setPresetSelectionFromCurrent = (side) => {
+            const current = getLoadedPresetName();
+            if (!current) return showModal({ msg: '无法获取当前预设名称。', isAlert: true });
+            if (!getPresetNames().includes(current)) return showModal({ msg: `当前预设 "${current}" 不在可用列表中。`, isAlert: true });
+            if (side === 'source') presetState.sourcePreset = current;
+            else presetState.targetPreset = current;
+            renderPresetPanel();
+        };
+
+        const buildCommandSourcePrompt = (entry) => {
+            const baseName = `指令_${presetTimestamp()}`;
+            return {
+                identifier: PunctuationButtons.generateId(),
+                name: baseName,
+                role: 'system',
+                content: entry.content || '',
+                injection_position: null,
+                injection_depth: 4,
+                injection_order: 100,
+                injection_trigger: [],
+                system_prompt: false,
+                marker: false,
+            };
+        };
+
+        const buildPresetCopyPrompt = (entry, targetData) => {
+            const copy = cloneData(entry);
+            copy.identifier = PunctuationButtons.generateId();
+            copy.name = ensureUniqueTargetName(targetData, copy.name || `条目_${presetTimestamp()}`);
+            if (!copy.hasOwnProperty('injection_order')) copy.injection_order = 100;
+            if (!Array.isArray(copy.injection_trigger)) copy.injection_trigger = [];
+            copy.system_prompt = !!copy.system_prompt;
+            copy.marker = !!copy.marker;
+            delete copy.enabled;
+            delete copy.isUninserted;
+            return copy;
+        };
+
+        const getTargetInsertIndex = (targetData, position, refId) => {
+            const orderBucket = ensureOrderBucket(targetData);
+            if (position === 'top') return 0;
+            if (position === 'bottom') return orderBucket.order.length;
+            if (position === 'after' && refId) {
+                const idx = orderBucket.order.findIndex((item) => item.identifier === refId);
+                return idx >= 0 ? idx + 1 : orderBucket.order.length;
+            }
+            return orderBucket.order.length;
+        };
+
+        const insertPromptsToTarget = async (sourceEntries, position = 'bottom', refId = null) => {
+            const targetName = presetState.targetPreset;
+            if (!targetName) return showModal({ msg: '请先选择目标预设。', isAlert: true });
+            const targetData = getPresetDataByName(targetName);
+            if (!targetData) return showModal({ msg: '无法获取目标预设数据。', isAlert: true });
+            if (!Array.isArray(targetData.prompts)) targetData.prompts = [];
+            const orderBucket = ensureOrderBucket(targetData);
+            const newOrderEntries = [];
+
+            sourceEntries.forEach((entry) => {
+                if (!entry) return;
+                if (entry.sourceType === 'command') {
+                    const newPrompt = buildCommandSourcePrompt(entry);
+                    newPrompt.name = ensureUniqueTargetName(targetData, newPrompt.name);
+                    targetData.prompts.push(newPrompt);
+                    newOrderEntries.push({ identifier: newPrompt.identifier, enabled: $wrap.find('#preset-auto-enable').is(':checked') });
+                } else {
+                    const newPrompt = buildPresetCopyPrompt(entry, targetData);
+                    targetData.prompts.push(newPrompt);
+                    newOrderEntries.push({ identifier: newPrompt.identifier, enabled: $wrap.find('#preset-auto-enable').is(':checked') });
+                }
+            });
+
+            const insertIndex = getTargetInsertIndex(targetData, position, refId);
+            orderBucket.order.splice(insertIndex, 0, ...newOrderEntries);
+            await savePresetData(targetName, targetData);
+            presetState.targetSelection.clear();
+            renderPresetPanel();
+        };
+
+        const updateTargetPromptById = async (entryId, updatedEntry, shouldInsert = false, insertMode = 'bottom') => {
+            const targetName = presetState.targetPreset;
+            if (!targetName) return showModal({ msg: '请先选择目标预设。', isAlert: true });
+            const targetData = getPresetDataByName(targetName);
+            if (!targetData) return showModal({ msg: '无法获取目标预设数据。', isAlert: true });
+            if (!Array.isArray(targetData.prompts)) targetData.prompts = [];
+            const index = targetData.prompts.findIndex((item) => item && item.identifier === entryId);
+            if (index < 0) throw new Error('未找到目标条目');
+            const current = targetData.prompts[index];
+            const next = {
+                ...current,
+                ...updatedEntry,
+                identifier: current.identifier,
+                system_prompt: !!current.system_prompt,
+                marker: !!current.marker,
+            };
+            targetData.prompts[index] = next;
+            const orderBucket = ensureOrderBucket(targetData);
+            const existingOrderIndex = orderBucket.order.findIndex((item) => item.identifier === current.identifier);
+            if (shouldInsert && existingOrderIndex < 0) {
+                const insertIndex = getTargetInsertIndex(targetData, insertMode, null);
+                orderBucket.order.splice(insertIndex, 0, { identifier: current.identifier, enabled: true });
+            }
+            if ($wrap.find('#preset-auto-save').is(':checked')) {
+                await savePresetData(targetName, targetData);
+            } else {
+                await savePresetData(targetName, targetData);
+            }
+            renderPresetPanel();
+        };
+
+        const insertExistingTargetEntry = async (entryId, position = 'bottom', refId = null) => {
+            const targetName = presetState.targetPreset;
+            if (!targetName) return showModal({ msg: '请先选择目标预设。', isAlert: true });
+            const targetData = getPresetDataByName(targetName);
+            if (!targetData) return showModal({ msg: '无法获取目标预设数据。', isAlert: true });
+            const prompt = (targetData.prompts || []).find((item) => item && item.identifier === entryId);
+            if (!prompt) return showModal({ msg: '未找到目标条目。', isAlert: true });
+            const orderBucket = ensureOrderBucket(targetData);
+            const existingIndex = orderBucket.order.findIndex((item) => item.identifier === entryId);
+            if (existingIndex >= 0) {
+                orderBucket.order[existingIndex].enabled = true;
+            } else {
+                const insertIndex = getTargetInsertIndex(targetData, position, refId);
+                orderBucket.order.splice(insertIndex, 0, { identifier: entryId, enabled: $wrap.find('#preset-auto-enable').is(':checked') });
+            }
+            await savePresetData(targetName, targetData);
+            renderPresetPanel();
+        };
+
+        const deleteSelectedTargetEntries = async () => {
+            const targetName = presetState.targetPreset;
+            if (!targetName) return showModal({ msg: '请先选择目标预设。', isAlert: true });
+            const targetData = getPresetDataByName(targetName);
+            if (!targetData) return showModal({ msg: '无法获取目标预设数据。', isAlert: true });
+            const ids = new Set(presetState.targetSelection);
+            if (!ids.size) return showModal({ msg: '请先勾选要删除的条目。', isAlert: true });
+            if (!window.confirm(`确定删除选中的 ${ids.size} 个目标条目吗？`)) return;
+            targetData.prompts = (targetData.prompts || []).filter((item) => item && !ids.has(item.identifier));
+            if (targetData.prompt_order) {
+                targetData.prompt_order.forEach((order) => {
+                    if (Array.isArray(order.order)) order.order = order.order.filter((item) => !ids.has(item.identifier));
+                });
+            }
+            await savePresetData(targetName, targetData);
+            presetState.targetSelection.clear();
+            renderPresetPanel();
+        };
+
+        const openEditDialog = (entryId, shouldInsert = false) => {
+            const targetData = getPresetDataByName(presetState.targetPreset);
+            if (!targetData) return showModal({ msg: '请先选择目标预设。', isAlert: true });
+            const prompt = (targetData.prompts || []).find((item) => item && item.identifier === entryId);
+            if (!prompt) return showModal({ msg: '未找到要编辑的条目。', isAlert: true });
+            presetState.editEntry = cloneData(prompt);
+            presetState.editIsNew = false;
+            presetState.editShouldInsert = shouldInsert || !!prompt.isUninserted;
+            $wrap.find('#preset-edit-name').val(prompt.name || '');
+            $wrap.find('#preset-edit-role').val(prompt.role || 'system');
+            $wrap.find('#preset-edit-position').val(prompt.injection_position == 1 ? 'chat' : 'relative');
+            $wrap.find('#preset-edit-depth').val(prompt.injection_depth ?? 4);
+            $wrap.find('#preset-edit-order').val(prompt.injection_order ?? 100);
+            $wrap.find('#preset-edit-triggers').val(Array.isArray(prompt.injection_trigger) ? prompt.injection_trigger.join(', ') : '');
+            $wrap.find('#preset-edit-content').val(prompt.content || '');
+            $wrap.find('#preset-edit-layer').addClass('open');
+        };
+
+        const openSourceInsertDialog = (entryId) => {
+            const sourceEntries = getSourceEntries();
+            const entry = sourceEntries.find((item) => (item.identifier || item.commandId || '') === entryId);
+            if (!entry) return;
+            const refId = presetState.targetSelection.size ? [...presetState.targetSelection][0] : null;
+            insertPromptsToTarget([entry], 'bottom', refId);
+        };
+
+        const moveSelectedSourceEntries = async (position) => {
+            const ids = new Set(presetState.sourceSelection);
+            const entries = getSourceEntries().filter((entry, index) => {
+                const id = entry.identifier || entry.commandId || `source-${index}`;
+                return ids.has(id);
+            });
+            if (!entries.length) return showModal({ msg: '请先勾选源内容。', isAlert: true });
+            const refId = position === 'after' ? [...presetState.targetSelection][0] || null : null;
+            await insertPromptsToTarget(entries, position, refId);
+        };
+
+        const loadPresetPanel = () => {
+            fillPresetSelectors();
+            renderPresetPanel();
         };
 
         const collectCommandsByCategory = () => {
@@ -1354,10 +2009,14 @@ const PunctuationButtons = {
         const renderMainView = () => {
             $wrap.find('[data-main-panel="commands"]').toggle(state.activeMainView === 'commands');
             $wrap.find('[data-main-panel="symbols"]').toggle(state.activeMainView === 'symbols');
+            $wrap.find('[data-main-panel="presets"]').toggle(state.activeMainView === 'presets');
             $wrap.find('.monkey-main-tab').removeClass('active');
             $wrap.find(`.monkey-main-tab[data-main-view="${state.activeMainView}"]`).addClass('active');
+            $wrap.toggleClass('preset-wide', state.activeMainView === 'presets');
             if (state.activeMainView === 'commands') {
                 renderUI();
+            } else if (state.activeMainView === 'presets') {
+                loadPresetPanel();
             } else {
                 const symbolView = $wrap.find('#symbol-tabs-container .punct-tab.active').data('symbol-view');
                 symbolView === 'edit' ? renderSymbolEdit() : renderSymbolAdd();
@@ -1492,7 +2151,7 @@ const PunctuationButtons = {
         });
 
         let activeInput = null;
-        $wrap.on('focus', '#cmd-input-title, #cmd-input-text, #cmd-cat-prefix, #cmd-cat-suffix', function() {
+        $wrap.on('focus', '#cmd-input-title, #cmd-input-text, #cmd-cat-prefix, #cmd-cat-suffix, #preset-edit-content, #preset-edit-name', function() {
             activeInput = this;
         });
 
@@ -1500,7 +2159,10 @@ const PunctuationButtons = {
             e.preventDefault();
             const left = $(this).attr('data-left') || '';
             const right = $(this).attr('data-right') || '';
-            if (!activeInput) activeInput = $wrap.find('#cmd-input-text')[0];
+            const presetInput = $wrap.find('#preset-edit-content')[0];
+            if ($(this).closest('#preset-edit-quick-row').length) activeInput = presetInput;
+            if (!activeInput) activeInput = $wrap.find('#cmd-input-text')[0] || presetInput;
+            if (!activeInput) return;
 
             activeInput.focus();
             const start = activeInput.selectionStart || 0;
@@ -1657,6 +2319,184 @@ const PunctuationButtons = {
             $wrap.find('#symbol-tabs-container .punct-tab').removeClass('active');
             $(this).addClass('active');
             $(this).data('symbol-view') === 'add' ? renderSymbolAdd() : renderSymbolEdit();
+        });
+
+        $wrap.on('change', '#preset-source-kind', function() {
+            presetState.sourceKind = String($(this).val() || 'preset');
+            presetState.sourceSelection.clear();
+            renderPresetPanel();
+        });
+
+        $wrap.on('change', '#preset-source-preset', function() {
+            presetState.sourcePreset = String($(this).val() || '');
+            presetState.sourceSelection.clear();
+            renderPresetPanel();
+        });
+
+        $wrap.on('change', '#preset-target-preset', function() {
+            presetState.targetPreset = String($(this).val() || '');
+            presetState.targetSelection.clear();
+            renderPresetPanel();
+        });
+
+        $wrap.on('change', '#preset-command-category', function() {
+            presetState.sourceCategory = String($(this).val() || Object.keys(DEFAULT_CMD_CATEGORIES)[0]);
+            presetState.sourceSelection.clear();
+            renderPresetPanel();
+        });
+
+        $wrap.on('change', '#preset-target-mode', function() {
+            presetState.targetMode = String($(this).val() || 'inserted');
+            presetState.targetSelection.clear();
+            renderPresetPanel();
+        });
+
+        $wrap.on('input', '#preset-source-search', function() {
+            presetState.sourceSearch = String($(this).val() || '');
+            renderPresetSourceList();
+        });
+
+        $wrap.on('input', '#preset-target-search', function() {
+            presetState.targetSearch = String($(this).val() || '');
+            renderPresetTargetList();
+        });
+
+        $wrap.on('click', '#preset-load-btn', renderPresetPanel);
+        $wrap.on('click', '#preset-current-source', () => setPresetSelectionFromCurrent('source'));
+        $wrap.on('click', '#preset-current-target', () => setPresetSelectionFromCurrent('target'));
+
+        $wrap.on('change', '[data-source-check]', function() {
+            const id = String($(this).attr('data-source-check'));
+            if ($(this).is(':checked')) presetState.sourceSelection.add(id);
+            else presetState.sourceSelection.delete(id);
+            $wrap.find('#preset-source-count').text(`${getSourceEntries().length} 条 / 已选 ${presetState.sourceSelection.size}`);
+        });
+
+        $wrap.on('change', '[data-target-check]', function() {
+            const id = String($(this).attr('data-target-check'));
+            if ($(this).is(':checked')) presetState.targetSelection.add(id);
+            else presetState.targetSelection.delete(id);
+            $wrap.find('#preset-target-count').text(`${getTargetEntries().length} 条 / 已选 ${presetState.targetSelection.size}`);
+        });
+
+        $wrap.on('click', '#preset-source-all', () => {
+            getSourceEntries().forEach((entry, index) => {
+                presetState.sourceSelection.add(entry.identifier || entry.commandId || `source-${index}`);
+            });
+            renderPresetSourceList();
+        });
+
+        $wrap.on('click', '#preset-source-none', () => {
+            presetState.sourceSelection.clear();
+            renderPresetSourceList();
+        });
+
+        $wrap.on('click', '#preset-target-all', () => {
+            getTargetEntries().forEach((entry, index) => {
+                presetState.targetSelection.add(entry.identifier || `target-${index}`);
+            });
+            renderPresetTargetList();
+        });
+
+        $wrap.on('click', '.preset-source-insert', async function() {
+            const id = String($(this).attr('data-source-insert'));
+            const entries = getSourceEntries();
+            const entry = entries.find((item, index) => (item.identifier || item.commandId || `source-${index}`) === id);
+            try {
+                if (entry) await insertPromptsToTarget([entry], 'bottom', null);
+            } catch (error) {
+                showModal({ msg: `插入失败：${error.message}`, isAlert: true });
+            }
+        });
+
+        $wrap.on('click', '#preset-insert-top', async () => {
+            try { await moveSelectedSourceEntries('top'); }
+            catch (error) { showModal({ msg: `插入失败：${error.message}`, isAlert: true }); }
+        });
+
+        $wrap.on('click', '#preset-insert-after', async () => {
+            try { await moveSelectedSourceEntries('after'); }
+            catch (error) { showModal({ msg: `插入失败：${error.message}`, isAlert: true }); }
+        });
+
+        $wrap.on('click', '#preset-insert-bottom', async () => {
+            try { await moveSelectedSourceEntries('bottom'); }
+            catch (error) { showModal({ msg: `插入失败：${error.message}`, isAlert: true }); }
+        });
+
+        $wrap.on('click', '.preset-target-edit', function() {
+            openEditDialog(String($(this).attr('data-target-edit')));
+        });
+
+        $wrap.on('click', '.preset-target-insert', async function() {
+            try {
+                const id = String($(this).attr('data-target-insert'));
+                const refId = [...presetState.targetSelection].find((selected) => selected !== id) || null;
+                await insertExistingTargetEntry(id, refId ? 'after' : 'bottom', refId);
+            } catch (error) {
+                showModal({ msg: `插入失败：${error.message}`, isAlert: true });
+            }
+        });
+
+        $wrap.on('click', '#preset-place-uninserted', async () => {
+            try {
+                const ids = [...presetState.targetSelection];
+                if (!ids.length) return showModal({ msg: '请先勾选目标侧未插入提示词。', isAlert: true });
+                for (const id of ids) {
+                    await insertExistingTargetEntry(id, 'bottom', null);
+                }
+            } catch (error) {
+                showModal({ msg: `插入失败：${error.message}`, isAlert: true });
+            }
+        });
+
+        $wrap.on('click', '#preset-delete-target', deleteSelectedTargetEntries);
+
+        const closePresetEditor = () => {
+            presetState.editEntry = null;
+            $wrap.find('#preset-edit-layer').removeClass('open');
+        };
+
+        $wrap.on('click', '#preset-edit-close, #preset-edit-cancel', closePresetEditor);
+        $wrap.on('click', '#preset-edit-layer', function(event) {
+            if (event.target === this) closePresetEditor();
+        });
+
+        const collectPresetEditForm = () => {
+            const position = String($wrap.find('#preset-edit-position').val() || 'relative');
+            const triggers = String($wrap.find('#preset-edit-triggers').val() || '')
+                .split(',')
+                .map((item) => item.trim())
+                .filter(Boolean);
+            return {
+                name: String($wrap.find('#preset-edit-name').val() || '').trim() || `条目_${presetTimestamp()}`,
+                role: String($wrap.find('#preset-edit-role').val() || 'system'),
+                content: String($wrap.find('#preset-edit-content').val() || ''),
+                injection_position: position === 'chat' ? 1 : null,
+                injection_depth: position === 'chat' ? (parseInt($wrap.find('#preset-edit-depth').val(), 10) || 4) : 4,
+                injection_order: parseInt($wrap.find('#preset-edit-order').val(), 10) || 100,
+                injection_trigger: triggers,
+            };
+        };
+
+        $wrap.on('click', '#preset-edit-save', async () => {
+            if (!presetState.editEntry?.identifier) return;
+            try {
+                await updateTargetPromptById(presetState.editEntry.identifier, collectPresetEditForm(), false);
+                closePresetEditor();
+            } catch (error) {
+                showModal({ msg: `保存失败：${error.message}`, isAlert: true });
+            }
+        });
+
+        $wrap.on('click', '#preset-edit-save-insert', async () => {
+            if (!presetState.editEntry?.identifier) return;
+            try {
+                await updateTargetPromptById(presetState.editEntry.identifier, collectPresetEditForm(), true, 'bottom');
+                closePresetEditor();
+            } catch (error) {
+                showModal({ msg: `保存失败：${error.message}`, isAlert: true });
+            }
         });
 
         $wrap.on('click', '#cmd-tabs-container .punct-tab', function() {

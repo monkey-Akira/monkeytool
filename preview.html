@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>猴子的小工具 - 窗口预览</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #ececec;
+        color: #000;
+        font-family: "YouYuan", "Comic Sans MS", "Microsoft YaHei", sans-serif;
+      }
+      .preview-popup {
+        width: min(680px, calc(100vw - 32px));
+        max-height: calc(100vh - 48px);
+        overflow: hidden;
+        border: 2px solid #000;
+        border-radius: 22px;
+        background: #fff;
+        box-shadow: 3px 3px 3px #80808075;
+      }
+      .punct-settings {
+        position: relative;
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-height: 85vh;
+        color: #000;
+        padding: 16px;
+        width: 100%;
+        min-width: 280px;
+        max-width: 620px;
+        margin: 0 auto;
+        -webkit-overflow-scrolling: touch;
+        background: #fff;
+        text-shadow: none;
+        font-weight: 600;
+        border-radius: 20px;
+      }
+      .punct-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+      .punct-title { font-size: 18px; font-weight: 800; background: #fff; border: 1.5px solid #000; border-left: 2px solid #000; border-radius: 14px; padding: 10px 18px; }
+      .punct-tabs { display: flex; gap: 6px; margin-bottom: 16px; background: #f0f0f0; padding: 5px; border: 1.5px dashed #000; border-radius: 16px; }
+      .punct-tab { flex: 1; border: 1.5px solid transparent; background: transparent; color: #555; border-radius: 12px; padding: 10px 8px; cursor: pointer; font-weight: bold; text-align: center; font-size: 14px; font-family: inherit; text-shadow: none; }
+      .punct-tab.active { background: #fff; color: #000; border-color: #000; box-shadow: 1px 2px 5px #a7a7a7; }
+      .punct-action { border: 1.5px solid #000; background: #fff; color: #000; border-radius: 14px; padding: 8px 14px; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 1px 2px 5px #a7a7a7; font-family: inherit; text-shadow: none; }
+      .punct-panel, .cmd-editor-wrap { border: 1.5px solid #000; border-radius: 18px; padding: 16px; background: #fff; box-shadow: 1px 2px 5px #a7a7a7; margin-bottom: 16px; }
+      .cmd-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+      .cmd-search, .punct-field input, .punct-field textarea, .punct-field select {
+        border: 1.5px dashed #000;
+        border-radius: 14px;
+        padding: 10px 12px;
+        background: #f0f0f0;
+        outline: none;
+        font-family: inherit;
+        color: #000;
+        width: 100%;
+        text-shadow: none;
+      }
+      .cmd-search { flex: 1; min-width: 160px; height: 38px; }
+      .punct-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+      .punct-field label { font-size: 12px; font-weight: 700; }
+      .cmd-filter-bar, .cmd-tag-editor, .cmd-tags-display, .cmd-quick-inserts { display: flex; flex-wrap: wrap; gap: 8px; }
+      .cmd-tag, .cmd-tag-mini, .cmd-quick-btn {
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+        font-weight: 700;
+        border: 1.5px dashed #000;
+        text-shadow: none;
+      }
+      .cmd-tag { font-size: 12px; padding: 4px 12px; cursor: pointer; }
+      .cmd-tag.active { background: #000; color: #fff; border-style: solid; }
+      .cmd-tag-mini { font-size: 11px; padding: 2px 8px; background: #f0f0f0; }
+      .cmd-quick-btn { font-size: 12px; padding: 4px 8px; cursor: pointer; }
+      .cmd-list-wrap { display: flex; flex-direction: column; gap: 12px; }
+      .cmd-row { border: 1.5px solid #000; border-radius: 18px; padding: 14px; background: #fff; display: flex; gap: 12px; box-shadow: 1px 2px 5px #a7a7a7; align-items: center; }
+      .cmd-content { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+      .cmd-title { font-weight: 800; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cmd-text { font-size: 12px; color: #333; line-height: 1.4; }
+      .cmd-actions { display: flex; flex-direction: column; gap: 10px; border-left: 1.5px dashed #000; padding-left: 12px; }
+      .cmd-btn-icon { font-size: 16px; opacity: 0.7; }
+    </style>
+  </head>
+  <body>
+    <div class="preview-popup">
+      <div class="punct-settings">
+        <div class="punct-tabs">
+          <button class="punct-tab active">指令仓库</button>
+          <button class="punct-tab">符号</button>
+        </div>
+        <div class="punct-head">
+          <div class="punct-title">常用指令库</div>
+          <div style="display:flex; gap:8px;">
+            <button class="punct-action">📥 导入</button>
+            <button class="punct-action">📤 导出</button>
+          </div>
+        </div>
+        <div class="cmd-toolbar">
+          <input class="cmd-search" placeholder="搜索指令标题、内容或标签..." />
+          <button class="punct-action">⚙️ 格式</button>
+          <button class="punct-action">➕ 新建</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:8px;">
+          <div class="cmd-filter-bar">
+            <span class="cmd-tag active">剧情</span>
+            <span class="cmd-tag">动作</span>
+            <span class="cmd-tag">常用</span>
+          </div>
+          <button class="punct-action">管理标签</button>
+        </div>
+        <div class="cmd-editor-wrap">
+          <div class="punct-field">
+            <input placeholder="指令标题" />
+          </div>
+          <div class="punct-field">
+            <div class="cmd-quick-inserts">
+              <span class="cmd-quick-btn">{{char}}</span>
+              <span class="cmd-quick-btn">{{user}}</span>
+              <span class="cmd-quick-btn">()</span>
+            </div>
+            <textarea rows="3" placeholder="输入指令内容..."></textarea>
+          </div>
+          <div class="cmd-tag-editor">
+            <span class="cmd-tag">新标签</span>
+            <span class="cmd-tag active">常用</span>
+          </div>
+        </div>
+        <div class="cmd-list-wrap">
+          <div class="cmd-row">
+            <div class="cmd-content">
+              <div class="cmd-title">示例指令标题</div>
+              <div class="cmd-text">这里是指令内容预览，用来检查窗口、卡片和文字的视觉效果。</div>
+              <div class="cmd-tags-display">
+                <span class="cmd-tag-mini">剧情</span>
+                <span class="cmd-tag-mini">常用</span>
+              </div>
+            </div>
+            <div class="cmd-actions">
+              <span class="cmd-btn-icon">♡</span>
+              <span class="cmd-btn-icon">✎</span>
+              <span class="cmd-btn-icon">✖</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
