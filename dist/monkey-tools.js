@@ -953,13 +953,13 @@ var PunctuationButtons = {
             .cmd-quick-btn:active { transform:scale(0.95); }
 
             .preset-shell { display:flex; flex-direction:column; gap:12px; }
-            .preset-setup { display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end; }
+            .preset-setup { display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:end; }
             .preset-setup .preset-field { display:flex; flex-direction:column; gap:6px; }
             .preset-setup select, .preset-setup input, .preset-setup button { height:38px; }
             .preset-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
             .preset-toggle-group { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
             .preset-toggle { display:inline-flex; gap:6px; align-items:center; font-size:12px; font-weight:700; }
-            .preset-workbench { display:grid; grid-template-columns:minmax(0,1fr) 102px minmax(0,1fr); gap:12px; align-items:start; }
+            .preset-workbench { display:grid; grid-template-columns:minmax(0,1.15fr) 118px minmax(0,1.15fr); gap:14px; align-items:start; }
             .preset-column { border:1px solid #d0d7de; border-radius:12px; background:#fff; overflow:hidden; }
             .preset-column-head { padding:10px 12px; border-bottom:1px solid #d0d7de; background:#f8fafc; display:flex; flex-direction:column; gap:8px; }
             .preset-column-title { display:flex; justify-content:space-between; gap:8px; align-items:center; }
@@ -967,7 +967,7 @@ var PunctuationButtons = {
             .preset-column-tools { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:6px; }
             .preset-column-tools.target-tools { grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto; }
             .preset-column-tools select, .preset-column-tools input, .preset-column-tools button { height:34px; padding:6px 8px; font-size:12px; }
-            .preset-list { min-height:360px; max-height:52vh; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px; background:#fbfcfe; }
+            .preset-list { min-height:390px; max-height:54vh; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px; background:#fbfcfe; }
             .preset-slot { border:1px dashed #2da44e; border-radius:8px; background:#f0fff4; color:#1a7f37; padding:8px; text-align:center; font-size:12px; font-weight:800; cursor:pointer; }
             .preset-item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:start; border:1px solid #d8dee4; border-radius:10px; background:#fff; padding:9px; }
             .preset-item.uninserted { border-style:dashed; background:#fffaf0; }
@@ -975,7 +975,7 @@ var PunctuationButtons = {
             .preset-item-main { min-width:0; }
             .preset-item-name { font-size:13px; font-weight:800; line-height:1.35; word-break:break-word; }
             .preset-item-meta { margin-top:4px; color:#667085; font-size:11px; line-height:1.5; }
-            .preset-item-text { margin-top:5px; color:#52606d; font-size:12px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
+            .preset-item-text { margin-top:5px; color:#52606d; font-size:12px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:3; line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
             .preset-tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:5px; }
             .preset-tag { border-radius:999px; background:#edf2f7; color:#52606d; padding:2px 7px; font-size:11px; font-weight:700; }
             .preset-tag.warn { background:#fff0c2; color:#8a6100; }
@@ -984,7 +984,7 @@ var PunctuationButtons = {
             .preset-actions { display:flex; flex-direction:column; gap:8px; justify-content:center; position:sticky; top:16px; }
             .preset-actions button { min-height:40px; padding:8px 6px; font-size:13px; }
             .preset-actions .preset-note { border:1px dashed #d0d7de; border-radius:8px; background:#fff; color:#667085; padding:8px; font-size:12px; line-height:1.45; text-align:center; }
-            .preset-editor { display:grid; grid-template-columns:240px minmax(0,1fr); gap:12px; }
+            .preset-editor { display:grid; grid-template-columns:minmax(200px,220px) minmax(0,1fr); gap:12px; }
             .preset-panel { border:1px solid #d0d7de; border-radius:12px; background:#fff; overflow:hidden; }
             .preset-panel-head { padding:10px 12px; border-bottom:1px solid #d0d7de; background:#f8fafc; font-size:14px; font-weight:800; }
             .preset-panel-body { padding:12px; display:flex; flex-direction:column; gap:10px; }
@@ -1015,8 +1015,13 @@ var PunctuationButtons = {
             @media (max-width: 620px) {
                 .preset-column-title, .preset-toolbar { flex-direction:column; align-items:stretch; }
                 .preset-column-tools, .preset-column-tools.target-tools { grid-template-columns:1fr 1fr; }
-                .preset-list { min-height:300px; }
+                .preset-list { min-height:280px; max-height:none; }
                 .preset-actions { grid-template-columns:1fr; }
+                .preset-item { grid-template-columns:1fr; }
+                .preset-item input[type="checkbox"] { margin:0; }
+                .preset-item-actions { flex-direction:row; justify-content:flex-end; }
+                .preset-item-actions .icon-btn { width:auto; min-width:36px; }
+                .preset-setup { grid-template-columns:1fr; }
             }
         </style>
     `,
@@ -1410,9 +1415,9 @@ var PunctuationButtons = {
 		};
 		const presetApiInfo = () => {
 			try {
-				const context = window.SillyTavern?.getContext?.() || {};
+				const context = window.SillyTavern?.getContext?.() || window.parent?.SillyTavern?.getContext?.() || {};
 				const mainApi = context.mainApi;
-				const manager = context.getPresetManager?.(mainApi === "koboldhorde" ? "kobold" : mainApi);
+				const manager = context.getPresetManager?.(mainApi === "koboldhorde" ? "kobold" : mainApi) || context.presetManager;
 				if (!manager) return null;
 				return {
 					context,
@@ -1421,9 +1426,14 @@ var PunctuationButtons = {
 					presetNames: (() => {
 						try {
 							const list = manager.getPresetList?.();
-							if (Array.isArray(list?.preset_names)) return list.preset_names;
-							if (list?.preset_names && typeof list.preset_names === "object") return Object.keys(list.preset_names);
-							if (Array.isArray(list)) return list;
+							const normalizeNames = (items) => Array.from(new Set((items || []).map((item) => typeof item === "string" ? item : item?.name || item?.preset_name || item?.value).filter(Boolean).map(String)));
+							if (Array.isArray(list?.preset_names)) return normalizeNames(list.preset_names);
+							if (list?.preset_names && typeof list.preset_names === "object") return normalizeNames(Object.keys(list.preset_names));
+							if (Array.isArray(list?.presets)) return normalizeNames(list.presets);
+							if (list?.presets && typeof list.presets === "object") return normalizeNames(Object.keys(list.presets));
+							if (Array.isArray(list)) return normalizeNames(list);
+							if (Array.isArray(manager.preset_names)) return normalizeNames(manager.preset_names);
+							if (manager.preset_names && typeof manager.preset_names === "object") return normalizeNames(Object.keys(manager.preset_names));
 							return [];
 						} catch (_) {
 							return [];
@@ -1434,7 +1444,11 @@ var PunctuationButtons = {
 				return null;
 			}
 		};
-		const getPresetNames = () => presetApiInfo()?.presetNames || [];
+		const getPresetNames = () => {
+			const names = presetApiInfo()?.presetNames || [];
+			const current = getLoadedPresetName();
+			return current && !names.includes(current) ? [current, ...names] : names;
+		};
 		const getLoadedPresetName = () => window.getLoadedPresetName?.() || window.TavernHelper?.getLoadedPresetName?.() || null;
 		const cloneData = (value) => JSON.parse(JSON.stringify(value));
 		const getPresetDataByName = (name) => {
@@ -1496,19 +1510,35 @@ var PunctuationButtons = {
 			if (mode === "uninserted") return uninserted;
 			return ordered.concat(uninserted);
 		};
-		const getSourceEntries = () => {
-			if (presetState.sourceKind === "commands") return PunctuationButtons.loadCommands().filter((command) => normalizeCategoryName(command.category) === presetState.sourceCategory).map((command) => ({
-				sourceType: "command",
-				commandId: command.id,
-				name: command.title || command.text?.slice(0, 12) || "指令内容",
-				content: command.text || "",
-				role: "system",
-				isCommand: true
-			})).filter((entry) => {
-				const query = presetState.sourceSearch.trim().toLowerCase();
-				if (!query) return true;
-				return [entry.content, entry.name].some((value) => String(value || "").toLowerCase().includes(query));
+		const getAvailableCommandCategories = () => {
+			const categories = new Set(Object.keys(PunctuationButtons.loadCategorySettings()));
+			PunctuationButtons.loadCommands().forEach((command) => {
+				if (command?.category) categories.add(String(command.category));
 			});
+			const result = Array.from(categories).filter(Boolean);
+			return result.length ? result : Object.keys(DEFAULT_CMD_CATEGORIES);
+		};
+		const normalizePresetSourceCategory = () => {
+			const categories = getAvailableCommandCategories();
+			if (!categories.includes(presetState.sourceCategory)) presetState.sourceCategory = categories[0] || Object.keys(DEFAULT_CMD_CATEGORIES)[0];
+			return presetState.sourceCategory;
+		};
+		const getSourceEntries = () => {
+			if (presetState.sourceKind === "commands") {
+				const selectedCategory = normalizePresetSourceCategory();
+				return PunctuationButtons.loadCommands().filter((command) => String(command.category || "") === selectedCategory).map((command) => ({
+					sourceType: "command",
+					commandId: command.id,
+					name: command.title || command.text?.slice(0, 12) || "指令内容",
+					content: command.text || "",
+					role: "system",
+					isCommand: true
+				})).filter((entry) => {
+					const query = presetState.sourceSearch.trim().toLowerCase();
+					if (!query) return true;
+					return [entry.content, entry.name].some((value) => String(value || "").toLowerCase().includes(query));
+				});
+			}
 			if (!presetState.sourcePreset) return [];
 			return getPromptEntriesFromPreset(getPresetDataByName(presetState.sourcePreset), "all").filter((entry) => {
 				const query = presetState.sourceSearch.trim().toLowerCase();
@@ -1536,7 +1566,10 @@ var PunctuationButtons = {
 				].map((value) => String(value ?? "")).join(" ").toLowerCase().includes(query);
 			});
 		};
-		const commandCategoryOptions = () => Object.keys(DEFAULT_CMD_CATEGORIES).map((category) => `<option value="${PunctuationButtons.escapeHtml(category)}" ${presetState.sourceCategory === category ? "selected" : ""}>${PunctuationButtons.escapeHtml(category)}</option>`).join("");
+		const commandCategoryOptions = () => {
+			normalizePresetSourceCategory();
+			return getAvailableCommandCategories().map((category) => `<option value="${PunctuationButtons.escapeHtml(category)}" ${presetState.sourceCategory === category ? "selected" : ""}>${PunctuationButtons.escapeHtml(category)}</option>`).join("");
+		};
 		const fillPresetSelectors = () => {
 			const names = getPresetNames();
 			const selectedSource = presetState.sourcePreset;
