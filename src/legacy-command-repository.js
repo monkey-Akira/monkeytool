@@ -899,10 +899,15 @@ const PunctuationButtons = {
             .cmd-quick-btn:active { transform:scale(0.95); }
 
             .preset-shell { display:flex; flex-direction:column; gap:12px; }
-            .preset-setup { display:flex; flex-direction:column; gap:10px; border:1px solid #d0d7de; border-radius:12px; padding:12px; background:#fbfcfe; }
+            .preset-step { border:1px solid #d0d7de; border-radius:12px; background:#fff; overflow:hidden; }
+            .preset-step-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom:1px solid #d0d7de; background:#f8fafc; }
+            .preset-step-head h4 { margin:0; font-size:14px; font-weight:800; }
+            .preset-step-body { padding:12px; display:flex; flex-direction:column; gap:10px; }
+            .preset-setup { display:flex; flex-direction:column; gap:10px; }
             .preset-setup-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto; gap:10px; align-items:end; }
             .preset-source-row { display:grid; grid-template-columns:180px minmax(0,1fr); gap:10px; align-items:end; }
             .preset-setup .preset-field { display:flex; flex-direction:column; gap:6px; }
+            .preset-setup select, .preset-setup input, .preset-setup button, .preset-step select, .preset-step input, .preset-step button { max-width:100%; min-width:0; }
             .preset-setup select, .preset-setup input, .preset-setup button { height:38px; }
             .preset-category-strip { display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:8px; border:1px dashed #d0d7de; border-radius:10px; background:#fff; min-height:38px; }
             .preset-category-strip button { min-height:28px; padding:4px 9px; border-radius:999px; font-size:12px; box-shadow:none; }
@@ -921,7 +926,7 @@ const PunctuationButtons = {
             .preset-column-tools { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:6px; }
             .preset-column-tools.target-tools { grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto; }
             .preset-column-tools select, .preset-column-tools input, .preset-column-tools button { height:34px; padding:6px 8px; font-size:12px; }
-            .preset-list { min-height:390px; max-height:54vh; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px; background:#fbfcfe; }
+            .preset-list { min-height:360px; max-height:54vh; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px; background:#fbfcfe; }
             .preset-slot { border:1px dashed #2da44e; border-radius:8px; background:#f0fff4; color:#1a7f37; padding:8px; text-align:center; font-size:12px; font-weight:800; cursor:pointer; }
             .preset-item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:start; border:1px solid #d8dee4; border-radius:10px; background:#fff; padding:9px; }
             .preset-item.uninserted { border-style:dashed; background:#fffaf0; }
@@ -966,6 +971,11 @@ const PunctuationButtons = {
                 .preset-insert-hint { flex-basis:100%; text-align:center; }
             }
             @media (max-width: 620px) {
+                .preset-step-head { align-items:flex-start; flex-direction:column; }
+                .preset-step-body { padding:10px; }
+                .preset-setup-row, .preset-source-row { gap:8px; }
+                .preset-toggle-group { flex-direction:column; align-items:stretch; }
+                .preset-toggle { justify-content:flex-start; }
                 .preset-column-title, .preset-toolbar { flex-direction:column; align-items:stretch; }
                 .preset-column-tools, .preset-column-tools.target-tools { grid-template-columns:1fr 1fr; }
                 .preset-list { min-height:280px; max-height:none; }
@@ -1121,53 +1131,62 @@ const PunctuationButtons = {
                 <div data-main-panel="presets" style="display:none;">
                     <div class="preset-shell">
                         <div class="preset-setup">
-                            <div class="preset-setup-row">
-                                <div class="preset-field">
-                                    <label>左侧来源</label>
-                                    <select id="preset-source-kind">
-                                        <option value="preset">源预设</option>
-                                        <option value="commands">指令仓库</option>
-                                    </select>
+                            <div class="preset-step">
+                                <div class="preset-step-head">
+                                    <h4>1. 选择来源</h4>
                                 </div>
-                                <div class="preset-field">
-                                    <label>目标预设</label>
-                                    <select id="preset-target-preset"><option value="">请选择目标预设</option></select>
+                                <div class="preset-step-body">
+                                    <div class="preset-setup-row">
+                                        <div class="preset-field">
+                                            <label>左侧来源</label>
+                                            <select id="preset-source-kind">
+                                                <option value="preset">源预设</option>
+                                                <option value="commands">指令仓库</option>
+                                            </select>
+                                        </div>
+                                        <div class="preset-field" id="preset-source-preset-field">
+                                            <label>源预设</label>
+                                            <select id="preset-source-preset"><option value="">请选择源预设</option></select>
+                                        </div>
+                                        <button class="punct-action" id="preset-current-source">当前预设为源</button>
+                                    </div>
                                 </div>
-                                <button class="punct-action" id="preset-load-btn" style="height:38px; background:#000; color:#fff;">读取</button>
                             </div>
-                            <div class="preset-source-row">
-                                <div class="preset-field" id="preset-source-preset-field">
-                                    <label>源预设</label>
-                                    <select id="preset-source-preset"><option value="">请选择源预设</option></select>
+
+                            <div class="preset-step">
+                                <div class="preset-step-head">
+                                    <h4>2. 选择目标</h4>
                                 </div>
-                                <div class="preset-field preset-hidden" id="preset-command-category-field">
-                                    <label>指令分类</label>
-                                    <select id="preset-command-category"></select>
-                                </div>
-                                <div class="preset-field preset-hidden" id="preset-command-category-strip-field">
-                                    <label>分类快捷选择</label>
-                                    <div class="preset-category-strip" id="preset-command-category-strip"></div>
+                                <div class="preset-step-body">
+                                    <div class="preset-setup-row">
+                                        <div class="preset-field">
+                                            <label>目标预设</label>
+                                            <select id="preset-target-preset"><option value="">请选择目标预设</option></select>
+                                        </div>
+                                        <button class="punct-action" id="preset-current-target">当前预设为目标</button>
+                                        <button class="punct-action" id="preset-load-btn" style="height:38px; background:#000; color:#fff;">读取</button>
+                                    </div>
+                                    <div class="preset-toggle-group">
+                                        <label class="preset-toggle"><input type="checkbox" id="preset-auto-enable" checked> 插入后自动开启条目</label>
+                                        <label class="preset-toggle"><input type="checkbox" id="preset-auto-save" checked> 自动保存目标预设</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="preset-toolbar">
-                            <div class="preset-toggle-group">
-                                <label class="preset-toggle"><input type="checkbox" id="preset-auto-enable" checked> 插入后自动开启条目</label>
-                                <label class="preset-toggle"><input type="checkbox" id="preset-auto-save" checked> 自动保存目标预设</label>
+                        <div class="preset-step">
+                            <div class="preset-step-head">
+                                <h4>3. 插入到目标</h4>
+                                <span class="preset-insert-hint">单向写入：只修改目标预设。</span>
                             </div>
-                            <div class="preset-toggle-group">
-                                <button class="punct-action" id="preset-current-source">当前预设为源</button>
-                                <button class="punct-action" id="preset-current-target">当前预设为目标</button>
+                            <div class="preset-step-body">
+                                <div class="preset-insert-bar">
+                                    <button class="punct-action" id="preset-insert-top">插入到目标顶部</button>
+                                    <button class="punct-action" id="preset-insert-after">插入到目标选中项后</button>
+                                    <button class="punct-action" id="preset-insert-bottom" style="background:#000; color:#fff;">插入到目标底部</button>
+                                    <button class="punct-action" id="preset-place-uninserted">插入选中的未插入提示词</button>
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="preset-insert-bar">
-                            <button class="punct-action" id="preset-insert-top">插入到目标顶部</button>
-                            <button class="punct-action" id="preset-insert-after">插入到目标选中项后</button>
-                            <button class="punct-action" id="preset-insert-bottom" style="background:#000; color:#fff;">插入到目标底部</button>
-                            <button class="punct-action" id="preset-place-uninserted">插入选中的未插入提示词</button>
-                            <span class="preset-insert-hint">单向写入：只修改目标预设。</span>
                         </div>
 
                         <div class="preset-workbench">
@@ -1181,6 +1200,14 @@ const PunctuationButtons = {
                                         <input type="text" id="preset-source-search" placeholder="搜索源内容">
                                         <button class="punct-action" id="preset-source-all">全选</button>
                                         <button class="punct-action" id="preset-source-none">清空</button>
+                                    </div>
+                                    <div class="preset-field preset-hidden" id="preset-command-category-field">
+                                        <label>指令分类</label>
+                                        <select id="preset-command-category"></select>
+                                    </div>
+                                    <div class="preset-field preset-hidden" id="preset-command-category-strip-field">
+                                        <label>分类快捷选择</label>
+                                        <div class="preset-category-strip" id="preset-command-category-strip"></div>
                                     </div>
                                 </div>
                                 <div class="preset-list" id="preset-source-list"></div>
@@ -1597,7 +1624,10 @@ const PunctuationButtons = {
                 ? '<div class="preset-list-hint">勾选要插入的具体指令，然后点击上方插入按钮；也可以点单条“插入”直接写入目标预设。只会插入指令内容，默认 system，不带标题、标签和格式。</div>'
                 : '<div class="preset-list-hint">勾选源预设条目后插入到目标预设；源预设不会被修改。</div>';
             if (!entries.length) {
-                $wrap.find('#preset-source-list').html(`${hint}<div class="preset-empty">没有可显示的源内容</div>`);
+                const emptyText = presetState.sourceKind === 'commands'
+                    ? `当前分类「${PunctuationButtons.escapeHtml(presetState.sourceCategory)}」没有指令，请切换分类或先在指令仓库新增指令。`
+                    : (presetState.sourcePreset ? '当前源预设没有可插入条目。' : '请选择源预设。');
+                $wrap.find('#preset-source-list').html(`${hint}<div class="preset-empty">${emptyText}</div>`);
                 return;
             }
             const html = entries.map((entry, index) => {
